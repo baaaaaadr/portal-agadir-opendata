@@ -1,0 +1,754 @@
+Contexte Complet du Projet: portal-agadir-opendata
+Généré le: 2025-04-13T16:17:46.116Z
+
+=== ARBORESCENCE DU PROJET (Simplifiée) ===
+portal-agadir-opendata
+├── eslint.config.js
+├── index.html
+├── package.json
+├── postcss.config.js
+├── public
+│   └── vite.svg
+├── README.md
+├── src
+│   ├── App.css
+│   ├── App.jsx
+│   ├── assets
+│   │   └── react.svg
+│   ├── components
+│   │   ├── ThemeToggle.jsx
+│   │   └── visualizations
+│   │       └── CoutParQuartierChart.jsx
+│   ├── index.css
+│   ├── main.jsx
+│   ├── services
+│   │   └── equipementService.js
+│   └── supabaseClient.js
+├── tailwind.config.js
+└── vite.config.js
+
+
+=== CONTENU DES FICHIERS ===
+
+--- START OF FILE: README.md ---
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+--- END OF FILE: README.md ---
+
+--- START OF FILE: eslint.config.js ---
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+
+export default [
+  { ignores: ['dist'] },
+  {
+    files: ['**/*.{js,jsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...reactHooks.configs.recommended.rules,
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+    },
+  },
+]
+
+--- END OF FILE: eslint.config.js ---
+
+--- START OF FILE: index.html ---
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portail Open Data Agadir</title>
+  </head>
+  <body class="font-body">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+--- END OF FILE: index.html ---
+
+--- START OF FILE: package.json ---
+{
+  "name": "portal-agadir-opendata",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "context": "node scripts/create-context.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "chart.js": "^4.4.8",
+    "leaflet": "^1.9.4",
+    "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.0.0",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.21.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^15.15.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.2.0"
+  }
+}
+
+--- END OF FILE: package.json ---
+
+--- START OF FILE: postcss.config.js ---
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+--- END OF FILE: postcss.config.js ---
+
+--- START OF FILE: src/App.css ---
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+--- END OF FILE: src/App.css ---
+
+--- START OF FILE: src/App.jsx ---
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import './App.css';
+import { fetchEquipements } from './services/equipementService';
+import ThemeToggle from './components/ThemeToggle';
+import CoutParQuartierChart from './components/visualizations/CoutParQuartierChart';
+
+// Créez des composants simples pour les pages
+function HomePage() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-4xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+        Portail des Données Ouvertes d'Agadir
+      </h1>
+      <p className="text-xl font-body text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+        Découvrez les données ouvertes de la ville d'Agadir
+      </p>
+      <Link
+        to="/equipements"
+        className="mt-6 inline-block bg-primary hover:bg-primary-light text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-200"
+      >
+        Explorer les Équipements
+      </Link>
+    </div>
+  );
+}
+
+function EquipementsPage() {
+  const [equipements, setEquipements] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // Add a state variable to trigger chart re-render if needed
+  const [chartKey, setChartKey] = useState(0);
+
+  useEffect(() => {
+    async function loadEquipements() {
+      setIsLoading(true);
+      setError(null);
+
+      const { data, error: fetchError } = await fetchEquipements(); // Renamed error variable
+
+      if (fetchError) {
+        setError(fetchError.message);
+        setEquipements([]);
+      } else {
+        setEquipements(data || []);
+        // Update chart key to potentially force re-render after data is loaded
+        setChartKey(prevKey => prevKey + 1);
+      }
+      setIsLoading(false);
+    }
+
+    loadEquipements();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  let content;
+  if (isLoading) {
+    content = (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  } else if (error) {
+    content = (
+      <div className="text-center">
+        <p className="text-red-500 text-lg font-body">Erreur lors du chargement: {error}</p>
+        <button
+          onClick={loadEquipements} // Removed () => loadEquipements() as it's not needed here
+          className="mt-4 inline-block bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  } else if (equipements.length === 0) {
+    content = (
+      <div className="text-center">
+        <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-lg font-body">
+          Aucun équipement trouvé.
+        </p>
+      </div>
+    );
+  } else {
+    content = (
+      <>
+        <div className="overflow-x-auto">
+          {/* Updated table styles */}
+          <table className="min-w-full bg-neutral-surface-light dark:bg-neutral-surface-dark border border-secondary-dark dark:border-neutral-medium-gray table-auto">
+            {/* Updated thead styles */}
+            <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
+              <tr>
+                {/* Updated th styles */}
+                <th className="py-2 px-4 border-b text-left text-sm font-heading text-neutral-text-light dark:text-neutral-text-dark sticky top-0 bg-neutral-light-sand dark:bg-neutral-bg-alt-dark z-10">
+                  Nom du Projet
+                </th>
+                <th className="py-2 px-4 border-b text-left text-sm font-heading text-neutral-text-light dark:text-neutral-text-dark sticky top-0 bg-neutral-light-sand dark:bg-neutral-bg-alt-dark z-10">
+                  Quartier
+                </th>
+                <th className="py-2 px-4 border-b text-left text-sm font-heading text-neutral-text-light dark:text-neutral-text-dark sticky top-0 bg-neutral-light-sand dark:bg-neutral-bg-alt-dark z-10">
+                  Composantes
+                </th>
+                <th className="py-2 px-4 border-b text-right text-sm font-heading text-neutral-text-light dark:text-neutral-text-dark sticky top-0 bg-neutral-light-sand dark:bg-neutral-bg-alt-dark z-10">
+                  Coût Total (Dhs)
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {equipements.map((equipement) => (
+                // Updated tr styles
+                <tr
+                  key={equipement.id}
+                  className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark border-b border-secondary-dark dark:border-neutral-medium-gray"
+                >
+                  {/* Updated td styles */}
+                  <td className="py-2 px-4 text-sm font-body text-neutral-text-light dark:text-neutral-text-dark">
+                    {equipement.projet_nom || 'N/A'}
+                  </td>
+                  <td className="py-2 px-4 text-sm font-body text-neutral-text-light dark:text-neutral-text-dark">
+                    {equipement.quartier || 'N/A'}
+                  </td>
+                  <td className="py-2 px-4 text-sm font-body text-neutral-text-light dark:text-neutral-text-dark">
+                    {/* Line break handling */}
+                    {equipement.composantes ? (
+                      equipement.composantes.split('\\n').map((line, index) => (
+                        <span key={index} className="block">{line.trim()}</span>
+                      ))
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
+                  <td className="py-2 px-4 text-sm font-body text-neutral-text-light dark:text-neutral-text-dark text-right">
+                    {typeof equipement.cout_total === 'number'
+                      ? equipement.cout_total.toLocaleString('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                      : equipement.cout_total || 'N/A'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pass key to chart to force re-render */}
+        <CoutParQuartierChart key={chartKey} equipements={equipements} />
+      </>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+        Équipements Sportifs
+      </h2>
+      {content}
+      <Link
+        to="/"
+        className="mt-4 inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
+      >
+        Retour à l'accueil
+      </Link>
+    </div>
+  );
+}
+
+
+function NotFoundPage() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+        Page non trouvée
+      </h2>
+      <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-4">
+        La page que vous recherchez n'existe pas.
+      </p>
+      <Link
+        to="/"
+        className="inline-block bg-primary hover:bg-primary-light text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
+      >
+        Retour à l'accueil
+      </Link>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <div className="min-h-screen bg-neutral-bg-light dark:bg-neutral-bg-dark transition-colors duration-200">
+        <nav className="bg-primary dark:bg-neutral-surface-dark">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex">
+                <Link
+                  to="/"
+                  className="flex items-center text-white hover:text-white font-semibold"
+                >
+                  <span className="text-xl font-heading">Portail Opendata Agadir</span>
+                </Link>
+              </div>
+              <div className="flex items-center space-x-4">
+                <ThemeToggle />
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/equipements" element={<EquipementsPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </main>
+
+        <footer className="bg-neutral-surface-light dark:bg-neutral-surface-dark">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-center">
+              {new Date().getFullYear()} Portail Opendata Agadir. Tous droits réservés.
+            </p>
+          </div>
+        </footer>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+--- END OF FILE: src/App.jsx ---
+
+--- START OF FILE: src/components/ThemeToggle.jsx ---
+import { useEffect } from 'react';
+
+function ThemeToggle() {
+  // Fonction pour basculer le thème
+  const toggleTheme = () => {
+    const html = document.documentElement;
+    const isDark = html.classList.contains('dark');
+    
+    // Basculer la classe dark
+    html.classList.toggle('dark');
+    
+    // Sauvegarder la préférence dans localStorage
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  };
+
+  // Charger la préférence du thème au montage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="text-white hover:text-white px-4 py-2 flex items-center space-x-2"
+      aria-label="Toggle dark mode"
+    >
+      {document.documentElement.classList.contains('dark') ? (
+        <span>☀️</span>
+      ) : (
+        <span>🌙</span>
+      )}
+      <span className="text-sm">Mode Sombre</span>
+    </button>
+  );
+}
+
+export default ThemeToggle;
+
+--- END OF FILE: src/components/ThemeToggle.jsx ---
+
+--- START OF FILE: src/components/visualizations/CoutParQuartierChart.jsx ---
+import React from 'react';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+// Enregistrer les composants nécessaires de Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+function CoutParQuartierChart({ equipements }) {
+  // 1. Préparer les données pour le graphique
+  const dataParQuartier = equipements.reduce((acc, equipement) => {
+    const quartier = equipement.quartier || 'Non spécifié';
+    // S'assurer que cout_total est un nombre, sinon 0
+    const cout = typeof equipement.cout_total === 'number' ? equipement.cout_total : (parseFloat(equipement.cout_total) || 0);
+
+    if (!acc[quartier]) {
+      acc[quartier] = 0;
+    }
+    acc[quartier] += cout;
+    return acc;
+  }, {});
+
+  // Trier les quartiers par coût décroissant pour un meilleur affichage
+  const sortedQuartiers = Object.entries(dataParQuartier)
+    .sort(([, coutA], [, coutB]) => coutB - coutA)
+    .map(([quartier]) => quartier);
+
+  const sortedCouts = sortedQuartiers.map(quartier => dataParQuartier[quartier]);
+
+  // Ajouter la détection du mode sombre
+  const isDarkMode = document.documentElement.classList.contains('dark');
+  const titleColor = isDarkMode ? '#F8F9FA' : '#303841'; // Using neutral-text-dark / neutral-text-light hex codes
+  const textColor = isDarkMode ? '#F8F9FA' : '#303841'; // For legend and ticks
+  const gridColor = isDarkMode ? 'rgba(248, 249, 250, 0.1)' : 'rgba(48, 56, 65, 0.1)'; // Lighter grid for dark, darker for light
+  const tooltipBodyColor = isDarkMode ? '#F8F9FA' : '#303841';
+  const tooltipTitleColor = isDarkMode ? '#F8F9FA' : '#303841';
+
+  // AJOUTER CETTE LIGNE POUR LE DÉBOGAGE :
+  console.log('Données pour le graphique (horizontal):', { labels: sortedQuartiers, data: sortedCouts });
+
+  // 2. Configurer les données pour Chart.js
+  // Utilisation des couleurs primaires définies dans Tailwind (via leurs valeurs HEX)
+  const chartData = {
+    labels: sortedQuartiers, // Noms des quartiers sur l'axe Y maintenant
+    datasets: [
+      {
+        label: 'Coût Total (MAD)',
+        data: sortedCouts, // Coûts sur l'axe X maintenant
+        backgroundColor: 'rgba(62, 140, 170, 0.6)', // Primary DEFAULT avec transparence
+        borderColor: 'rgba(62, 140, 170, 1)', // Primary DEFAULT
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // 3. Configurer les options du graphique
+  const chartOptions = {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+             color: textColor,
+             font: {
+                family: "'Open Sans', sans-serif"
+             }
+        }
+      },
+      title: {
+        display: true,
+        text: 'Coût Total des Équipements Sportifs par Quartier',
+        color: titleColor,
+        font: {
+            family: "'Playfair Display', serif",
+            size: 18
+        },
+        padding: {
+             top: 10,
+             bottom: 20
+        }
+      },
+      tooltip: {
+         titleColor: tooltipTitleColor,
+         bodyColor: tooltipBodyColor,
+         callbacks: {
+            label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                    label += ': ';
+                }
+                if (context.parsed.x !== null) {
+                    label += new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(context.parsed.x);
+                }
+                return label;
+            }
+         },
+         bodyFont: {
+             family: "'Open Sans', sans-serif"
+         }
+      }
+    },
+    scales: {
+        x: {
+            beginAtZero: true,
+            ticks: {
+                color: textColor,
+                font: {
+                    family: "'Open Sans', sans-serif"
+                }
+            },
+            grid: {
+                color: gridColor
+            }
+        },
+        y: {
+             ticks: {
+                 color: textColor,
+                 font: {
+                    family: "'Open Sans', sans-serif",
+                    size: 12
+                 }
+             },
+             grid: {
+                  display: false
+             }
+        }
+    },
+  };
+
+  // 4. Rendre le composant Bar de react-chartjs-2
+  // Donner une hauteur fixe ou relative au conteneur pour que maintainAspectRatio: false fonctionne bien
+  // Increased height to h-[40rem] or more if needed for many labels
+  return (
+    <div className="my-8 p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md relative h-[40rem]">
+        <Bar options={chartOptions} data={chartData} />
+    </div>
+  );
+}
+
+export default CoutParQuartierChart;
+--- END OF FILE: src/components/visualizations/CoutParQuartierChart.jsx ---
+
+--- START OF FILE: src/index.css ---
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Vide pour le moment */
+}
+
+--- END OF FILE: src/index.css ---
+
+--- START OF FILE: src/main.jsx ---
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import './index.css'; // C'est ici que les directives Tailwind sont injectées
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
+--- END OF FILE: src/main.jsx ---
+
+--- START OF FILE: src/services/equipementService.js ---
+import { supabase } from '../supabaseClient'; // Importe le client Supabase configuré
+
+/**
+ * Récupère tous les équipements sportifs depuis Supabase.
+ * @returns {Promise<{data: Array|null, error: Object|null}>} Un objet avec les données ou une erreur.
+ */
+export async function fetchEquipements() {
+  console.log('Attempting to fetch equipements...'); // Log pour débogage
+  const { data, error } = await supabase
+    .from('equipements_sportifs') // Nom de votre table
+    .select('*'); // Sélectionne toutes les colonnes
+
+  if (error) {
+    console.error('Error fetching equipements:', error); // Log l'erreur
+  } else {
+    console.log('Equipements fetched successfully:', data); // Log les données reçues
+  }
+
+  return { data, error };
+}
+
+// Vous pourrez ajouter d'autres fonctions ici plus tard (ex: fetchEquipementById)
+
+--- END OF FILE: src/services/equipementService.js ---
+
+--- START OF FILE: src/supabaseClient.js ---
+﻿import { createClient } from '@supabase/supabase-js'
+
+// Récupère l'URL et la clé anonyme depuis les variables d'environnement
+// Le VITE_ prefix est important pour que Vite expose ces variables au client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Crée et exporte le client Supabase
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+--- END OF FILE: src/supabaseClient.js ---
+
+--- START OF FILE: tailwind.config.js ---
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          light: '#65A7C0',
+          DEFAULT: '#3E8CAA',
+          dark: '#2A6F8C',
+        },
+        secondary: {
+          light: '#F0E6D6',
+          DEFAULT: '#E2D1B5',
+          dark: '#C9B596',
+        },
+        accent: {
+          light: '#F2AA7A',
+          DEFAULT: '#E88C50',
+          dark: '#D06F35',
+        },
+        neutral: {
+          'soft-white': '#F8F9FA',
+          'light-sand': '#F2EBE1',
+          'charcoal': '#303841',
+          'medium-gray': '#8A959E',
+          'bg-light': '#F8F9FA',
+          'surface-light': '#FFFFFF',
+          'bg-alt-light': '#F2EBE1',
+          'text-light': '#303841',
+          'text-muted-light': '#8A959E',
+          'bg-dark': '#303841',
+          'surface-dark': '#3A444E',
+          'bg-alt-dark': '#495057',
+          'text-dark': '#F8F9FA',
+          'text-muted-dark': '#ADB5BD',
+        }
+      },
+      fontFamily: {
+        heading: ['Playfair Display', 'serif'],
+        body: ['Open Sans', 'sans-serif'],
+      },
+    },
+  },
+  plugins: [],
+}
+
+--- END OF FILE: tailwind.config.js ---
+
+--- START OF FILE: vite.config.js ---
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+
+--- END OF FILE: vite.config.js ---
+
