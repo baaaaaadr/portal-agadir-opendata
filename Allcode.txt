@@ -1,8 +1,8 @@
-Contexte Complet du Projet: Agadir Open Data
-Généré le: 2025-04-14T17:40:37.699Z
+Contexte Complet du Projet: portal-agadir-opendata
+Généré le: 2025-04-14T18:23:39.268Z
 
 === ARBORESCENCE DU PROJET (Simplifiée) ===
-Agadir Open Data
+portal-agadir-opendata
 ├── eslint.config.js
 ├── index.html
 ├── package.json
@@ -182,6 +182,7 @@ export default {
 --- END OF FILE: postcss.config.js ---
 
 --- START OF FILE: src/App.css ---
+/*
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -224,6 +225,7 @@ export default {
 .read-the-docs {
   color: #888;
 }
+*/
 
 --- END OF FILE: src/App.css ---
 
@@ -1091,6 +1093,12 @@ export default HotelsParClassementChart;
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    padding: 0;
+    margin: 0;
+    /* Ensure background color applies if needed, and height allows filling */
+    height: 100%; 
+  }
   /* Vide pour le moment */
 }
 

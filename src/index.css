@@ -5,6 +5,12 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    padding: 0;
+    margin: 0;
+    /* Ensure background color applies if needed, and height allows filling */
+    height: 100%; 
+  }
   /* Vide pour le moment */
 }
 
