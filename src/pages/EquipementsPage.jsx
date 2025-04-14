@@ -6,8 +6,10 @@ import MetadataBlock from '../components/datasets/MetadataBlock';
 import CoutParQuartierChart from '../components/visualizations/CoutParQuartierChart';
 import EquipementsMap from '../components/maps/EquipementsMap';
 import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer le nouveau composant Tabs
-import { FiTable, FiMap, FiBarChart2 } from 'react-icons/fi'; // Importer les icônes
+import { FiTable, FiMap, FiBarChart2, FiDownload } from 'react-icons/fi'; // Add FiDownload icon
 import equipementsBannerUrl from '../assets/equipements-banner.jpg'; // <-- Importer la bannière
+// --- Import Export Utils ---
+import { exportToCsv, exportToXlsx, exportToPdf } from '../utils/exportUtils'; // Adjust path if needed
 
 function EquipementsPage({ theme }) {
   // --- États (restent les mêmes) ---
@@ -123,7 +125,13 @@ function EquipementsPage({ theme }) {
     </div>
   );
 
-  // --- Rendu du tableau (sera utilisé dans un TabPanel) ---
+  // --- Define Headers for Export ---
+  // Keys must match the keys in your 'equipements' data objects
+  const exportHeaders = ['projet_nom', 'quartier', 'composantes', 'cout_total'];
+  // User-friendly titles for the columns
+  const exportHeaderTitles = ['Nom du Projet', 'Quartier', 'Composantes', 'Coût Total (MAD)'];
+
+  // --- Rendu du tableau (modified to be simpler here, focus on export) ---
   const renderTable = () => (
     <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
       <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-fixed">
@@ -234,6 +242,32 @@ function EquipementsPage({ theme }) {
 
               {/* Panneau 1: Tableau */}
               <TabPanel>
+                <div className="my-4 flex flex-wrap gap-2 justify-end">
+                  <button
+                    onClick={() => exportToCsv(filteredAndSortedEquipements, exportHeaders, exportHeaderTitles, 'equipements_agadir.csv')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-primary dark:bg-primary-dark rounded shadow hover:bg-primary-light dark:hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedEquipements.length === 0}
+                    title="Exporter en CSV"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> CSV
+                  </button>
+                  <button
+                    onClick={() => exportToXlsx(filteredAndSortedEquipements, exportHeaders, exportHeaderTitles, 'equipements_agadir.xlsx', 'Équipements')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 dark:bg-green-700 rounded shadow hover:bg-green-500 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedEquipements.length === 0}
+                    title="Exporter en Excel"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> XLSX
+                  </button>
+                  <button
+                    onClick={() => exportToPdf(filteredAndSortedEquipements, exportHeaders, exportHeaderTitles, 'equipements_agadir.pdf', 'Liste des Équipements Sportifs - Agadir')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 dark:bg-red-700 rounded shadow hover:bg-red-500 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedEquipements.length === 0}
+                    title="Exporter en PDF"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> PDF
+                  </button>
+                </div>
                 {filteredAndSortedEquipements.length > 0 ? (
                   renderTable()
                 ) : (
@@ -267,7 +301,7 @@ function EquipementsPage({ theme }) {
 
         {/* Lien Retour Accueil */}
         <div className="mt-10 text-left"> {/* Changé pour text-left */}
-            <Link to="/catalogue" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200 text-sm">
+            <Link to="/catalogue" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200">
                 ← Retour au Catalogue
             </Link>
         </div>

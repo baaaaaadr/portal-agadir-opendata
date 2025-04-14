@@ -1,5 +1,5 @@
 Contexte Complet du Projet: portal-agadir-opendata
-Généré le: 2025-04-14T19:10:19.286Z
+Généré le: 2025-04-14T20:38:17.015Z
 
 === ARBORESCENCE DU PROJET (Simplifiée) ===
 portal-agadir-opendata
@@ -53,7 +53,9 @@ portal-agadir-opendata
 │   │   ├── equipementService.js
 │   │   ├── hotelService.js
 │   │   └── jardinService.js
-│   └── supabaseClient.js
+│   ├── supabaseClient.js
+│   └── utils
+│       └── exportUtils.js
 ├── tailwind.config.js
 └── vite.config.js
 
@@ -146,13 +148,16 @@ export default [
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "chart.js": "^4.4.8",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "leaflet": "^1.9.4",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
     "react-leaflet": "^5.0.0",
-    "react-router-dom": "^7.5.0"
+    "react-router-dom": "^7.5.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
@@ -334,13 +339,8 @@ function App() {
                  </NavLink>
               </div>
 
-              {/* Right side items: Theme Toggle and Mobile Menu Button */}
+              {/* Right side items: Mobile Menu Button */}
               <div className="flex items-center">
-                 {/* Theme Toggle */}
-                 <div className="mr-2"> {/* Add margin if needed */} 
-                    <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-                 </div>
-
                  {/* Mobile Menu Button (Visible only on sm screens) */}
                  <div className="sm:hidden">
                     <button
@@ -414,11 +414,15 @@ function App() {
 
         {/* --- Footer --- */}
         <footer className="bg-neutral-surface-light dark:bg-neutral-surface-dark mt-auto border-t border-neutral-light-sand dark:border-neutral-bg-alt-dark">
-          {/* ... Footer content remains the same ... */}
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 text-center">
-            <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-xs font-body">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center text-xs">
+            {/* Copyright Text */}
+            <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark font-body">
               {new Date().getFullYear()} Portail Open Data Agadir - Propulsé par la Commune d'Agadir.
             </p>
+            {/* Theme Toggle */}
+            <div>
+                <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+            </div>
           </div>
         </footer>
 
@@ -1519,8 +1523,10 @@ import MetadataBlock from '../components/datasets/MetadataBlock';
 import CoutParQuartierChart from '../components/visualizations/CoutParQuartierChart';
 import EquipementsMap from '../components/maps/EquipementsMap';
 import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer le nouveau composant Tabs
-import { FiTable, FiMap, FiBarChart2 } from 'react-icons/fi'; // Importer les icônes
+import { FiTable, FiMap, FiBarChart2, FiDownload } from 'react-icons/fi'; // Add FiDownload icon
 import equipementsBannerUrl from '../assets/equipements-banner.jpg'; // <-- Importer la bannière
+// --- Import Export Utils ---
+import { exportToCsv, exportToXlsx, exportToPdf } from '../utils/exportUtils'; // Adjust path if needed
 
 function EquipementsPage({ theme }) {
   // --- États (restent les mêmes) ---
@@ -1636,7 +1642,13 @@ function EquipementsPage({ theme }) {
     </div>
   );
 
-  // --- Rendu du tableau (sera utilisé dans un TabPanel) ---
+  // --- Define Headers for Export ---
+  // Keys must match the keys in your 'equipements' data objects
+  const exportHeaders = ['projet_nom', 'quartier', 'composantes', 'cout_total'];
+  // User-friendly titles for the columns
+  const exportHeaderTitles = ['Nom du Projet', 'Quartier', 'Composantes', 'Coût Total (MAD)'];
+
+  // --- Rendu du tableau (modified to be simpler here, focus on export) ---
   const renderTable = () => (
     <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
       <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-fixed">
@@ -1747,6 +1759,32 @@ function EquipementsPage({ theme }) {
 
               {/* Panneau 1: Tableau */}
               <TabPanel>
+                <div className="my-4 flex flex-wrap gap-2 justify-end">
+                  <button
+                    onClick={() => exportToCsv(filteredAndSortedEquipements, exportHeaders, exportHeaderTitles, 'equipements_agadir.csv')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-primary dark:bg-primary-dark rounded shadow hover:bg-primary-light dark:hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedEquipements.length === 0}
+                    title="Exporter en CSV"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> CSV
+                  </button>
+                  <button
+                    onClick={() => exportToXlsx(filteredAndSortedEquipements, exportHeaders, exportHeaderTitles, 'equipements_agadir.xlsx', 'Équipements')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 dark:bg-green-700 rounded shadow hover:bg-green-500 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedEquipements.length === 0}
+                    title="Exporter en Excel"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> XLSX
+                  </button>
+                  <button
+                    onClick={() => exportToPdf(filteredAndSortedEquipements, exportHeaders, exportHeaderTitles, 'equipements_agadir.pdf', 'Liste des Équipements Sportifs - Agadir')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 dark:bg-red-700 rounded shadow hover:bg-red-500 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedEquipements.length === 0}
+                    title="Exporter en PDF"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> PDF
+                  </button>
+                </div>
                 {filteredAndSortedEquipements.length > 0 ? (
                   renderTable()
                 ) : (
@@ -1780,7 +1818,7 @@ function EquipementsPage({ theme }) {
 
         {/* Lien Retour Accueil */}
         <div className="mt-10 text-left"> {/* Changé pour text-left */}
-            <Link to="/catalogue" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200 text-sm">
+            <Link to="/catalogue" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200">
                 ← Retour au Catalogue
             </Link>
         </div>
@@ -1964,8 +2002,10 @@ import HotelsParClassementChart from '../components/visualizations/HotelsParClas
 import HotelsMap from '../components/maps/HotelsMap';
 import MetadataBlock from '../components/datasets/MetadataBlock';
 import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer Tabs
-import { FiTable, FiMap, FiBarChart2 } from 'react-icons/fi'; // Importer les icônes
+import { FiTable, FiMap, FiBarChart2, FiDownload } from 'react-icons/fi'; // Importer les icônes + FiDownload
 import hotelsBannerUrl from '../assets/hotels-banner.jpg'; // Importer la bannière
+// --- Import Export Utils ---
+import { exportToCsv, exportToXlsx, exportToPdf } from '../utils/exportUtils';
 
 function HotelsPage({ theme }) {
   // --- États --- 
@@ -2091,6 +2131,10 @@ function HotelsPage({ theme }) {
     </div>
   );
 
+  // --- Define Headers for Export ---
+  const exportHeaders = ['nom', 'classement', 'adresse'];
+  const exportHeaderTitles = ['Nom', 'Classement', 'Adresse'];
+
   // --- Rendu du tableau (pour TabPanel) ---
   const renderTable = () => (
     <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
@@ -2196,6 +2240,32 @@ function HotelsPage({ theme }) {
 
               {/* Panneau 1: Tableau */} 
               <TabPanel>
+                <div className="my-4 flex flex-wrap gap-2 justify-end">
+                  <button
+                    onClick={() => exportToCsv(sortedAndFilteredHotels, exportHeaders, exportHeaderTitles, 'hotels_agadir.csv')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-primary dark:bg-primary-dark rounded shadow hover:bg-primary-light dark:hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={sortedAndFilteredHotels.length === 0}
+                    title="Exporter en CSV"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> CSV
+                  </button>
+                  <button
+                    onClick={() => exportToXlsx(sortedAndFilteredHotels, exportHeaders, exportHeaderTitles, 'hotels_agadir.xlsx', 'Hôtels')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 dark:bg-green-700 rounded shadow hover:bg-green-500 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={sortedAndFilteredHotels.length === 0}
+                    title="Exporter en Excel"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> XLSX
+                  </button>
+                  <button
+                    onClick={() => exportToPdf(sortedAndFilteredHotels, exportHeaders, exportHeaderTitles, 'hotels_agadir.pdf', 'Liste des Hôtels Classés - Agadir')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 dark:bg-red-700 rounded shadow hover:bg-red-500 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={sortedAndFilteredHotels.length === 0}
+                    title="Exporter en PDF"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> PDF
+                  </button>
+                </div>
                 {sortedAndFilteredHotels.length > 0 ? (
                   renderTable()
                 ) : (
@@ -2503,8 +2573,10 @@ import { Link } from 'react-router-dom';
 import { fetchLignesBus } from '../services/busService';
 import MetadataBlock from '../components/datasets/MetadataBlock';
 import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer Tabs
-import { FiTable } from 'react-icons/fi'; // Importer l'icône
+import { FiTable, FiDownload } from 'react-icons/fi'; // Importer les icônes + FiDownload
 import busBannerUrl from '../assets/bus-banner.jpg'; // Importer la bannière
+// --- Import Export Utils ---
+import { exportToCsv, exportToXlsx, exportToPdf } from '../utils/exportUtils';
 
 function LignesBusPage({ theme }) { // theme non utilisé mais gardé
   // --- États ---
@@ -2601,6 +2673,10 @@ function LignesBusPage({ theme }) { // theme non utilisé mais gardé
       </div>
     </div>
   );
+
+  // --- Define Headers for Export ---
+  const exportHeaders = ['numero_ligne', 'designation', 'detail_depart', 'detail_arrivee'];
+  const exportHeaderTitles = ['Ligne', 'Désignation', 'Détail Départ', 'Détail Arrivée'];
 
   // --- Rendu du tableau (TabPanel) ---
   const renderTable = () => (
@@ -2707,6 +2783,33 @@ function LignesBusPage({ theme }) { // theme non utilisé mais gardé
 
               {/* Panneau Tableau */} 
               <TabPanel>
+                <div className="my-4 flex flex-wrap gap-2 justify-end">
+                  <button
+                    onClick={() => exportToCsv(filteredAndSortedLignes, exportHeaders, exportHeaderTitles, 'lignes_bus_agadir.csv')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-primary dark:bg-primary-dark rounded shadow hover:bg-primary-light dark:hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedLignes.length === 0}
+                    title="Exporter en CSV"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> CSV
+                  </button>
+                  <button
+                    onClick={() => exportToXlsx(filteredAndSortedLignes, exportHeaders, exportHeaderTitles, 'lignes_bus_agadir.xlsx', 'Lignes de Bus')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 dark:bg-green-700 rounded shadow hover:bg-green-500 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedLignes.length === 0}
+                    title="Exporter en Excel"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> XLSX
+                  </button>
+                  <button
+                    onClick={() => exportToPdf(filteredAndSortedLignes, exportHeaders, exportHeaderTitles, 'lignes_bus_agadir.pdf', 'Lignes de Bus Urbain - Agadir')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 dark:bg-red-700 rounded shadow hover:bg-red-500 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedLignes.length === 0}
+                    title="Exporter en PDF"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> PDF
+                  </button>
+                </div>
+
                 {filteredAndSortedLignes.length > 0 ? (
                   renderTable()
                 ) : (
@@ -2873,6 +2976,177 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 --- END OF FILE: src/supabaseClient.js ---
+
+--- START OF FILE: src/utils/exportUtils.js ---
+// src/utils/exportUtils.js
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable'; // Import the function directly
+
+/**
+ * Triggers a browser download for the given content.
+ * @param {string} content The content to download.
+ * @param {string} filename The desired filename.
+ * @param {string} mimeType The MIME type of the content.
+ */
+function triggerDownload(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Converts an array of objects to a CSV string.
+ * Handles basic quoting for commas and newlines.
+ * @param {Array<Object>} data Array of data objects.
+ * @param {Array<string>} headers Array of header strings (keys).
+ * @param {Array<string>} headerTitles Array of display titles for headers.
+ * @returns {string} CSV formatted string.
+ */
+function arrayToCsv(data, headers, headerTitles) {
+  const escapeCsvCell = (cellData) => {
+    const stringData = cellData === null || cellData === undefined ? '' : String(cellData);
+    // Quote if it contains comma, quote, or newline
+    if (stringData.includes(',') || stringData.includes('"') || stringData.includes('\n')) {
+      return `"${stringData.replace(/"/g, '""')}"`; // Escape quotes by doubling them
+    }
+    return stringData;
+  };
+
+  const csvRows = [];
+  // Add header row
+  csvRows.push(headerTitles.map(escapeCsvCell).join(','));
+
+  // Add data rows
+  data.forEach(row => {
+    const values = headers.map(header => escapeCsvCell(row[header]));
+    csvRows.push(values.join(','));
+  });
+
+  return csvRows.join('\n');
+}
+
+// --- Export Functions ---
+
+/**
+ * Exports data to a CSV file.
+ * @param {Array<Object>} data The data array.
+ * @param {Array<string>} headers The object keys to include.
+ * @param {Array<string>} headerTitles The display titles for columns.
+ * @param {string} filename The desired filename (e.g., 'equipements.csv').
+ */
+export function exportToCsv(data, headers, headerTitles, filename) {
+  if (!data || data.length === 0) {
+    alert("Aucune donnée à exporter.");
+    return;
+  }
+  try {
+    const csvContent = arrayToCsv(data, headers, headerTitles);
+    // Add BOM for Excel compatibility with UTF-8 special characters
+    const bom = '\uFEFF';
+    triggerDownload(bom + csvContent, filename, 'text/csv;charset=utf-8;');
+  } catch (error) {
+     console.error("Erreur lors de la génération CSV:", error);
+     alert("Une erreur est survenue lors de la génération du fichier CSV.");
+  }
+}
+
+/**
+ * Exports data to an XLSX (Excel) file.
+ * @param {Array<Object>} data The data array.
+ * @param {Array<string>} headers The object keys to include.
+ * @param {Array<string>} headerTitles The display titles for columns.
+ * @param {string} filename The desired filename (e.g., 'hotels.xlsx').
+ * @param {string} sheetName The name for the Excel sheet.
+ */
+export function exportToXlsx(data, headers, headerTitles, filename, sheetName = 'Données') {
+  if (!data || data.length === 0) {
+    alert("Aucune donnée à exporter.");
+    return;
+  }
+  try {
+    // Map data to match header order and titles
+    const mappedData = data.map(row => {
+      const newRow = {};
+      headers.forEach((header, index) => {
+        newRow[headerTitles[index]] = row[header] ?? ''; // Use display title as key, handle null/undefined
+      });
+      return newRow;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(mappedData, { header: headerTitles }); // Use headerTitles directly
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, filename);
+  } catch (error) {
+    console.error("Erreur lors de la génération XLSX:", error);
+    alert("Une erreur est survenue lors de la génération du fichier Excel.");
+  }
+}
+
+/**
+ * Exports data to a PDF file using jspdf and jspdf-autotable.
+ * @param {Array<Object>} data The data array.
+ * @param {Array<string>} headers The object keys to include.
+ * @param {Array<string>} headerTitles The display titles for columns.
+ * @param {string} filename The desired filename (e.g., 'lignes_bus.pdf').
+ * @param {string} title The title to display at the top of the PDF.
+ */
+export function exportToPdf(data, headers, headerTitles, filename, title) {
+  if (!data || data.length === 0) {
+    alert("Aucune donnée à exporter.");
+    return;
+  }
+  try {
+    const doc = new jsPDF({
+        orientation: 'landscape', // Use landscape for potentially wide tables
+    });
+
+    // Add title
+    doc.setFontSize(16);
+    doc.text(title, 14, 15); // Adjust position as needed
+
+    // Prepare data for autoTable
+    const tableData = data.map(row => headers.map(header => row[header] ?? '')); // Get values in header order
+
+    autoTable(doc, { // Call autoTable as a function, passing 'doc'
+      startY: 22, // Position below the title
+      head: [headerTitles], // Header row expects an array of arrays
+      body: tableData,
+      theme: 'grid', // Options: 'striped', 'grid', 'plain'
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        overflow: 'linebreak', // Handle long text
+      },
+      headStyles: {
+        fillColor: [62, 140, 170], // Primary color approx.
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      columnStyles: { // Optional: Adjust column widths if needed
+          // 0: { cellWidth: 30 }, // Example: Set width for the first column
+      }
+      // didDrawPage: function (data) { // Optional: Add page numbers or other footers
+      //   doc.setFontSize(10);
+      //   doc.text('Page ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+      // }
+    });
+
+    doc.save(filename);
+  } catch (error) {
+    console.error("Erreur lors de la génération PDF:", error);
+    alert(`Une erreur est survenue lors de la génération du fichier PDF: ${error.message}`);
+  }
+}
+
+--- END OF FILE: src/utils/exportUtils.js ---
 
 --- START OF FILE: tailwind.config.js ---
 /** @type {import('tailwindcss').Config} */

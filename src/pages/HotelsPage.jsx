@@ -5,8 +5,10 @@ import HotelsParClassementChart from '../components/visualizations/HotelsParClas
 import HotelsMap from '../components/maps/HotelsMap';
 import MetadataBlock from '../components/datasets/MetadataBlock';
 import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer Tabs
-import { FiTable, FiMap, FiBarChart2 } from 'react-icons/fi'; // Importer les icônes
+import { FiTable, FiMap, FiBarChart2, FiDownload } from 'react-icons/fi'; // Importer les icônes + FiDownload
 import hotelsBannerUrl from '../assets/hotels-banner.jpg'; // Importer la bannière
+// --- Import Export Utils ---
+import { exportToCsv, exportToXlsx, exportToPdf } from '../utils/exportUtils';
 
 function HotelsPage({ theme }) {
   // --- États --- 
@@ -132,6 +134,10 @@ function HotelsPage({ theme }) {
     </div>
   );
 
+  // --- Define Headers for Export ---
+  const exportHeaders = ['nom', 'classement', 'adresse'];
+  const exportHeaderTitles = ['Nom', 'Classement', 'Adresse'];
+
   // --- Rendu du tableau (pour TabPanel) ---
   const renderTable = () => (
     <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
@@ -237,6 +243,32 @@ function HotelsPage({ theme }) {
 
               {/* Panneau 1: Tableau */} 
               <TabPanel>
+                <div className="my-4 flex flex-wrap gap-2 justify-end">
+                  <button
+                    onClick={() => exportToCsv(sortedAndFilteredHotels, exportHeaders, exportHeaderTitles, 'hotels_agadir.csv')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-primary dark:bg-primary-dark rounded shadow hover:bg-primary-light dark:hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={sortedAndFilteredHotels.length === 0}
+                    title="Exporter en CSV"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> CSV
+                  </button>
+                  <button
+                    onClick={() => exportToXlsx(sortedAndFilteredHotels, exportHeaders, exportHeaderTitles, 'hotels_agadir.xlsx', 'Hôtels')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 dark:bg-green-700 rounded shadow hover:bg-green-500 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={sortedAndFilteredHotels.length === 0}
+                    title="Exporter en Excel"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> XLSX
+                  </button>
+                  <button
+                    onClick={() => exportToPdf(sortedAndFilteredHotels, exportHeaders, exportHeaderTitles, 'hotels_agadir.pdf', 'Liste des Hôtels Classés - Agadir')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 dark:bg-red-700 rounded shadow hover:bg-red-500 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={sortedAndFilteredHotels.length === 0}
+                    title="Exporter en PDF"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> PDF
+                  </button>
+                </div>
                 {sortedAndFilteredHotels.length > 0 ? (
                   renderTable()
                 ) : (

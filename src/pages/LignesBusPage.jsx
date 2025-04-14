@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom';
 import { fetchLignesBus } from '../services/busService';
 import MetadataBlock from '../components/datasets/MetadataBlock';
 import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer Tabs
-import { FiTable } from 'react-icons/fi'; // Importer l'icône
+import { FiTable, FiDownload } from 'react-icons/fi'; // Importer les icônes + FiDownload
 import busBannerUrl from '../assets/bus-banner.jpg'; // Importer la bannière
+// --- Import Export Utils ---
+import { exportToCsv, exportToXlsx, exportToPdf } from '../utils/exportUtils';
 
 function LignesBusPage({ theme }) { // theme non utilisé mais gardé
   // --- États ---
@@ -102,6 +104,10 @@ function LignesBusPage({ theme }) { // theme non utilisé mais gardé
       </div>
     </div>
   );
+
+  // --- Define Headers for Export ---
+  const exportHeaders = ['numero_ligne', 'designation', 'detail_depart', 'detail_arrivee'];
+  const exportHeaderTitles = ['Ligne', 'Désignation', 'Détail Départ', 'Détail Arrivée'];
 
   // --- Rendu du tableau (TabPanel) ---
   const renderTable = () => (
@@ -208,6 +214,33 @@ function LignesBusPage({ theme }) { // theme non utilisé mais gardé
 
               {/* Panneau Tableau */} 
               <TabPanel>
+                <div className="my-4 flex flex-wrap gap-2 justify-end">
+                  <button
+                    onClick={() => exportToCsv(filteredAndSortedLignes, exportHeaders, exportHeaderTitles, 'lignes_bus_agadir.csv')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-primary dark:bg-primary-dark rounded shadow hover:bg-primary-light dark:hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedLignes.length === 0}
+                    title="Exporter en CSV"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> CSV
+                  </button>
+                  <button
+                    onClick={() => exportToXlsx(filteredAndSortedLignes, exportHeaders, exportHeaderTitles, 'lignes_bus_agadir.xlsx', 'Lignes de Bus')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 dark:bg-green-700 rounded shadow hover:bg-green-500 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedLignes.length === 0}
+                    title="Exporter en Excel"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> XLSX
+                  </button>
+                  <button
+                    onClick={() => exportToPdf(filteredAndSortedLignes, exportHeaders, exportHeaderTitles, 'lignes_bus_agadir.pdf', 'Lignes de Bus Urbain - Agadir')}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 dark:bg-red-700 rounded shadow hover:bg-red-500 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition duration-150 ease-in-out disabled:opacity-50"
+                    disabled={filteredAndSortedLignes.length === 0}
+                    title="Exporter en PDF"
+                  >
+                    <FiDownload className="inline-block w-3 h-3 mr-1" /> PDF
+                  </button>
+                </div>
+
                 {filteredAndSortedLignes.length > 0 ? (
                   renderTable()
                 ) : (

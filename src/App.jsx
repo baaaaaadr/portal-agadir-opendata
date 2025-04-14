@@ -102,13 +102,8 @@ function App() {
                  </NavLink>
               </div>
 
-              {/* Right side items: Theme Toggle and Mobile Menu Button */}
+              {/* Right side items: Mobile Menu Button */}
               <div className="flex items-center">
-                 {/* Theme Toggle */}
-                 <div className="mr-2"> {/* Add margin if needed */} 
-                    <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-                 </div>
-
                  {/* Mobile Menu Button (Visible only on sm screens) */}
                  <div className="sm:hidden">
                     <button
@@ -182,11 +177,15 @@ function App() {
 
         {/* --- Footer --- */}
         <footer className="bg-neutral-surface-light dark:bg-neutral-surface-dark mt-auto border-t border-neutral-light-sand dark:border-neutral-bg-alt-dark">
-          {/* ... Footer content remains the same ... */}
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 text-center">
-            <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-xs font-body">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center text-xs">
+            {/* Copyright Text */}
+            <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark font-body">
               {new Date().getFullYear()} Portail Open Data Agadir - Propulsé par la Commune d'Agadir.
             </p>
+            {/* Theme Toggle */}
+            <div>
+                <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+            </div>
           </div>
         </footer>
 
