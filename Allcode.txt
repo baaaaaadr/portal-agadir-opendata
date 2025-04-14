@@ -1,5 +1,5 @@
 Contexte Complet du Projet: portal-agadir-opendata
-Généré le: 2025-04-13T16:17:46.116Z
+Généré le: 2025-04-14T00:15:10.649Z
 
 === ARBORESCENCE DU PROJET (Simplifiée) ===
 portal-agadir-opendata
@@ -16,13 +16,28 @@ portal-agadir-opendata
 │   ├── assets
 │   │   └── react.svg
 │   ├── components
+│   │   ├── maps
+│   │   │   ├── EquipementsMap.jsx
+│   │   │   ├── HotelsMap.jsx
+│   │   │   └── JardinsMap.jsx
 │   │   ├── ThemeToggle.jsx
 │   │   └── visualizations
-│   │       └── CoutParQuartierChart.jsx
+│   │       ├── CoutParQuartierChart.jsx
+│   │       └── HotelsParClassementChart.jsx
 │   ├── index.css
 │   ├── main.jsx
+│   ├── pages
+│   │   ├── EquipementsPage.jsx
+│   │   ├── HomePage.jsx
+│   │   ├── HotelsPage.jsx
+│   │   ├── JardinsPage.jsx
+│   │   ├── LignesBusPage.jsx
+│   │   └── NotFoundPage.jsx
 │   ├── services
-│   │   └── equipementService.js
+│   │   ├── busService.js
+│   │   ├── equipementService.js
+│   │   ├── hotelService.js
+│   │   └── jardinService.js
 │   └── supabaseClient.js
 ├── tailwind.config.js
 └── vite.config.js
@@ -197,60 +212,779 @@ export default {
 --- END OF FILE: src/App.css ---
 
 --- START OF FILE: src/App.jsx ---
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import './App.css';
-import { fetchEquipements } from './services/equipementService';
 import ThemeToggle from './components/ThemeToggle';
-import CoutParQuartierChart from './components/visualizations/CoutParQuartierChart';
+import HomePage from './pages/HomePage';
+import EquipementsPage from './pages/EquipementsPage';
+import HotelsPage from './pages/HotelsPage';
+import NotFoundPage from './pages/NotFoundPage';
+import JardinsPage from './pages/JardinsPage';
+import LignesBusPage from './pages/LignesBusPage';
 
-// Créez des composants simples pour les pages
-function HomePage() {
+function App() {
+  // 1. State for theme
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme ? savedTheme : 'light';
+  });
+
+  // 2. useEffect to apply theme to <html> and save
+  useEffect(() => {
+    const html = document.documentElement;
+    if (theme === 'dark') {
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+    console.log(`Theme changed to: ${theme}`);
+  }, [theme]);
+
+  // 3. Function to toggle theme
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-4xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-        Portail des Données Ouvertes d'Agadir
-      </h1>
-      <p className="text-xl font-body text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
-        Découvrez les données ouvertes de la ville d'Agadir
-      </p>
-      <Link
-        to="/equipements"
-        className="mt-6 inline-block bg-primary hover:bg-primary-light text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-200"
+    <Router>
+      <div className="min-h-screen flex flex-col bg-neutral-bg-light dark:bg-neutral-bg-dark transition-colors duration-200">
+        <nav className="bg-primary dark:bg-neutral-surface-dark shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex items-center">
+                <Link
+                  to="/"
+                  className="flex items-center text-white hover:text-neutral-soft-white font-semibold"
+                  aria-label="Accueil - Portail Opendata Agadir"
+                >
+                  <span className="text-xl font-heading">Portail Opendata Agadir</span>
+                </Link>
+              </div>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-4 items-center">
+                <Link to="/" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Accueil</Link>
+                <Link to="/equipements" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Équipements</Link>
+                <Link to="/hotels" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Hôtels</Link>
+                <Link to="/jardins" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Jardins</Link>
+                <Link to="/lignes-bus" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Lignes de Bus</Link>
+              </div>
+              <div className="flex items-center space-x-4">
+                <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <main className="flex-1 w-full">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/equipements" element={<EquipementsPage theme={theme} />} />
+            <Route path="/hotels" element={<HotelsPage theme={theme} />} />
+            <Route path="/jardins" element={<JardinsPage theme={theme} />} />
+            <Route path="/lignes-bus" element={<LignesBusPage theme={theme} />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </main>
+
+        <footer className="bg-neutral-surface-light dark:bg-neutral-surface-dark mt-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-center text-sm font-body">
+              {new Date().getFullYear()} Portail Opendata Agadir. Tous droits réservés.
+            </p>
+          </div>
+        </footer>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+--- END OF FILE: src/App.jsx ---
+
+--- START OF FILE: src/components/ThemeToggle.jsx ---
+import React from 'react';
+
+function ThemeToggle({ theme, toggleTheme }) {
+  return (
+    <button
+      onClick={toggleTheme}
+      className="relative p-1 rounded-lg hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-200"
+      aria-label="Basculer le thème"
+      title="Basculer le thème"
+    >
+      <svg
+        className={`w-6 h-6 transition-transform duration-200 ${theme === 'dark' ? 'rotate-180' : ''}`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
       >
-        Explorer les Équipements
-      </Link>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+        />
+      </svg>
+    </button>
+  );
+}
+
+export default ThemeToggle;
+
+--- END OF FILE: src/components/ThemeToggle.jsx ---
+
+--- START OF FILE: src/components/maps/EquipementsMap.jsx ---
+import React from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+
+// --- Correction pour l'icône par défaut de Leaflet (même que pour HotelsMap) ---
+import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
+import iconUrl from 'leaflet/dist/images/marker-icon.png';
+import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+
+const DefaultIcon = L.icon({
+    iconRetinaUrl,
+    iconUrl,
+    shadowUrl,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+// --- Fin de la correction de l'icône ---
+
+// Centre approximatif d'Agadir et niveau de zoom (peut être le même que pour les hôtels)
+const AGADIR_CENTER = [30.42, -9.59]; // Latitude, Longitude
+const INITIAL_ZOOM = 12; // Zoom un peu moins fort pour voir plus large ? à ajuster
+
+function EquipementsMap({ equipements }) {
+  // Filtrer les équipements pour ne garder que ceux avec des coordonnées valides
+  const equipementsWithCoords = equipements.filter(equip =>
+    equip.geom &&
+    equip.geom.type === 'Point' &&
+    Array.isArray(equip.geom.coordinates) &&
+    equip.geom.coordinates.length === 2 &&
+    typeof equip.geom.coordinates[0] === 'number' && // longitude
+    typeof equip.geom.coordinates[1] === 'number'    // latitude
+  );
+
+  if (equipementsWithCoords.length === 0) {
+       return <p className="text-center text-neutral-text-muted-light dark:text-neutral-text-muted-dark">Aucune donnée géographique disponible pour afficher la carte des équipements.</p>;
+  }
+
+  return (
+    <div className="my-8 rounded-lg shadow-md overflow-hidden">
+      <MapContainer
+         center={AGADIR_CENTER}
+         zoom={INITIAL_ZOOM}
+         scrollWheelZoom={true}
+         style={{ height: '500px', width: '100%' }}
+       >
+        <TileLayer
+          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {equipementsWithCoords.map(equip => {
+          // IMPORTANT : Inverser les coordonnées de GeoJSON [lon, lat] vers Leaflet [lat, lon]
+          const position = [equip.geom.coordinates[1], equip.geom.coordinates[0]];
+
+          return (
+            <Marker key={equip.id} position={position}>
+              <Popup>
+                <div className="font-body">
+                  <strong className="font-semibold block text-base mb-1">{equip.projet_nom || 'Équipement'}</strong>
+                  <span className="block text-sm text-gray-600">Quartier: {equip.quartier || 'N/A'}</span>
+                  {equip.composantes && (
+                       <p className="text-xs mt-1 border-t pt-1">
+                            {equip.composantes.split('\n').map((line, index) => (
+                                <span key={index} className="block">{line.trim()}</span>
+                            ))}
+                       </p>
+                  )}
+                   {typeof equip.cout_total === 'number' && (
+                       <p className="text-xs mt-1 font-medium">
+                           Coût: {equip.cout_total.toLocaleString('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                       </p>
+                   )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+      </MapContainer>
     </div>
   );
 }
 
-function EquipementsPage() {
+export default EquipementsMap;
+
+--- END OF FILE: src/components/maps/EquipementsMap.jsx ---
+
+--- START OF FILE: src/components/maps/HotelsMap.jsx ---
+import React from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet'; // Importe L pour gérer les icônes
+
+// --- Correction pour l'icône par défaut de Leaflet avec Vite/React ---
+// Voir: https://github.com/PaulLeCam/react-leaflet/issues/808
+import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
+import iconUrl from 'leaflet/dist/images/marker-icon.png';
+import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+
+const DefaultIcon = L.icon({
+    iconRetinaUrl,
+    iconUrl,
+    shadowUrl,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+// --- Fin de la correction de l'icône ---
+
+// Centre approximatif d'Agadir et niveau de zoom
+const AGADIR_CENTER = [30.42, -9.59]; // Latitude, Longitude
+const INITIAL_ZOOM = 13;
+
+function HotelsMap({ hotels }) {
+
+  // Filtrer les hôtels pour ne garder que ceux avec des coordonnées valides
+  const hotelsWithCoords = hotels.filter(hotel =>
+    hotel.geom &&
+    hotel.geom.type === 'Point' &&
+    Array.isArray(hotel.geom.coordinates) &&
+    hotel.geom.coordinates.length === 2 &&
+    typeof hotel.geom.coordinates[0] === 'number' && // longitude
+    typeof hotel.geom.coordinates[1] === 'number'    // latitude
+  );
+
+  if (hotelsWithCoords.length === 0) {
+       return <p className="text-center text-neutral-text-muted-light dark:text-neutral-text-muted-dark">Aucune donnée géographique disponible pour afficher la carte des hôtels.</p>;
+  }
+
+  return (
+    <div className="my-8 rounded-lg shadow-md overflow-hidden"> {/* Conteneur pour le style */}
+      <MapContainer
+         center={AGADIR_CENTER}
+         zoom={INITIAL_ZOOM}
+         scrollWheelZoom={true} // Permet le zoom avec la molette
+         style={{ height: '500px', width: '100%' }} // Hauteur et largeur explicites
+       >
+        <TileLayer
+          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {hotelsWithCoords.map(hotel => {
+          // IMPORTANT : Inverser les coordonnées de GeoJSON [lon, lat] vers Leaflet [lat, lon]
+          const position = [hotel.geom.coordinates[1], hotel.geom.coordinates[0]];
+
+          return (
+            <Marker key={hotel.id} position={position}>
+              <Popup>
+                <div className="font-body">
+                  <strong className="font-semibold block text-base mb-1">{hotel.nom || 'Hôtel'}</strong>
+                  <span className="block text-sm text-gray-600">{hotel.classement || 'Non classé'}</span>
+                  {/* On pourrait ajouter l'adresse ici si besoin */}
+                  {/* <span className="block text-xs mt-1">{hotel.adresse}</span> */}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+      </MapContainer>
+    </div>
+  );
+}
+
+export default HotelsMap;
+
+--- END OF FILE: src/components/maps/HotelsMap.jsx ---
+
+--- START OF FILE: src/components/maps/JardinsMap.jsx ---
+import React from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+
+// --- Icon fix (same as before) ---
+import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
+import iconUrl from 'leaflet/dist/images/marker-icon.png';
+import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+
+const DefaultIcon = L.icon({
+  iconRetinaUrl,
+  iconUrl,
+  shadowUrl,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  tooltipAnchor: [16, -28],
+  shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+// --- End icon fix ---
+
+const AGADIR_CENTER = [30.42, -9.59];
+const INITIAL_ZOOM = 14;
+
+function JardinsMap({ jardins }) {
+  const jardinsWithCoords = jardins.filter(jardin =>
+    jardin.geom?.type === 'Point' && Array.isArray(jardin.geom?.coordinates) && jardin.geom.coordinates.length === 2
+  );
+
+  if (jardinsWithCoords.length === 0) {
+    return <p className="text-center text-neutral-text-muted-light dark:text-neutral-text-muted-dark">Aucune donnée géographique disponible pour la carte des jardins.</p>;
+  }
+
+  return (
+    <div className="my-6 rounded-lg shadow-md overflow-hidden">
+      <MapContainer center={AGADIR_CENTER} zoom={INITIAL_ZOOM} scrollWheelZoom={true} style={{ height: '450px', width: '100%' }}>
+        <TileLayer attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {jardinsWithCoords.map(jardin => {
+          const position = [jardin.geom.coordinates[1], jardin.geom.coordinates[0]];
+          return (
+            <Marker key={jardin.id} position={position}>
+              <Popup>
+                <div className="font-body text-sm">
+                  <strong className="font-semibold block text-base mb-1">{jardin.nom || 'Jardin'}</strong>
+                  <span className="block text-xs text-gray-600">Quartier: {jardin.quartier || 'N/A'}</span>
+                  <span className="block text-xs mt-1">Horaires: {jardin.horaires || 'N/A'}</span>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+      </MapContainer>
+    </div>
+  );
+}
+
+export default JardinsMap;
+
+--- END OF FILE: src/components/maps/JardinsMap.jsx ---
+
+--- START OF FILE: src/components/visualizations/CoutParQuartierChart.jsx ---
+import React from 'react';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+// Register required Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+function CoutParQuartierChart({ equipements, theme }) {
+  // 1. Prepare chart data
+  const isDarkMode = theme === 'dark';
+  const titleColor = isDarkMode ? '#F8F9FA' : '#303841';
+  const textColor = isDarkMode ? '#ADB5BD' : '#8A959E';
+  const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  const tooltipBodyColor = isDarkMode ? '#F8F9FA' : '#303841';
+  const tooltipTitleColor = isDarkMode ? '#F8F9FA' : '#303841';
+  const barBackgroundColor = isDarkMode ? 'rgba(94, 166, 192, 0.7)' : 'rgba(62, 140, 170, 0.7)';
+  const barBorderColor = isDarkMode ? '#65A7C0' : '#3E8CAA';
+
+  const dataParQuartier = React.useMemo(() => {
+    console.log("Recalculating chart data...");
+    return equipements.reduce((acc, equipement) => {
+      const quartier = equipement.quartier || 'Non spécifié';
+      const cout = typeof equipement.cout_total === 'number' ? equipement.cout_total : (parseFloat(equipement.cout_total) || 0);
+
+      if (!acc[quartier]) {
+        acc[quartier] = 0;
+      }
+      acc[quartier] += cout;
+      return acc;
+    }, {});
+  }, [equipements]);
+
+  const { sortedQuartiers, sortedCouts } = React.useMemo(() => {
+    const sortedEntries = Object.entries(dataParQuartier)
+      .sort(([, coutA], [, coutB]) => coutB - coutA);
+    const quartiers = sortedEntries.map(([quartier]) => quartier);
+    const couts = sortedEntries.map(([, cout]) => cout);
+    console.log('Chart data (horizontal):', { labels: quartiers, data: couts });
+    return { sortedQuartiers: quartiers, sortedCouts: couts };
+  }, [dataParQuartier]);
+
+  // 3. Configure Chart.js data
+  const chartData = React.useMemo(() => ({
+    labels: sortedQuartiers,
+    datasets: [
+      {
+        label: 'Coût Total (MAD)',
+        data: sortedCouts,
+        backgroundColor: barBackgroundColor,
+        borderColor: barBorderColor,
+        borderWidth: 1,
+      },
+    ],
+  }), [sortedQuartiers, sortedCouts, barBackgroundColor, barBorderColor]);
+
+  // 4. Configure chart options
+  const chartOptions = React.useMemo(() => ({
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: textColor,
+          font: {
+            family: "'Open Sans', sans-serif",
+            size: 14
+          }
+        }
+      },
+      title: {
+        display: true,
+        text: 'Coût Total des Équipements Sportifs par Quartier',
+        color: titleColor,
+        font: {
+          family: "'Playfair Display', serif",
+          size: 24
+        },
+        padding: {
+          top: 10,
+          bottom: 20
+        }
+      },
+      tooltip: {
+        titleColor: tooltipTitleColor,
+        bodyColor: tooltipBodyColor,
+        backgroundColor: isDarkMode ? 'rgba(48, 56, 65, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+        borderWidth: 1,
+        callbacks: {
+          label: function(context) {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            if (context.parsed.x !== null) {
+              label += new Intl.NumberFormat('fr-MA', {
+                style: 'currency',
+                currency: 'MAD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              }).format(context.parsed.x);
+            }
+            return label;
+          }
+        },
+        bodyFont: {
+          family: "'Open Sans', sans-serif"
+        },
+        titleFont: {
+          family: "'Open Sans', sans-serif"
+        }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: {
+          color: textColor,
+          font: {
+            family: "'Open Sans', sans-serif",
+            size: 12
+          },
+          callback: function(value) {
+            if (value >= 1000000) return (value / 1000000) + 'M';
+            if (value >= 1000) return (value / 1000) + 'k';
+            return value;
+          }
+        },
+        grid: {
+          color: gridColor,
+          borderColor: gridColor,
+        },
+        border: {
+          color: gridColor
+        }
+      },
+      y: {
+        ticks: {
+          color: textColor,
+          font: {
+            family: "'Open Sans', sans-serif",
+            size: 12
+          },
+          autoSkip: false
+        },
+        grid: {
+          display: false
+        },
+        border: {
+          color: gridColor
+        }
+      }
+    },
+    animation: false,
+  }), [isDarkMode, titleColor, textColor, gridColor, tooltipTitleColor, tooltipBodyColor, barBackgroundColor, barBorderColor]);
+
+  // 5. Render the Bar component
+  return (
+    <div className="my-8 p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md relative h-[600px]">
+      <Bar options={chartOptions} data={chartData} />
+    </div>
+  );
+}
+
+export default CoutParQuartierChart;
+--- END OF FILE: src/components/visualizations/CoutParQuartierChart.jsx ---
+
+--- START OF FILE: src/components/visualizations/HotelsParClassementChart.jsx ---
+import React from 'react';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from 'chart.js';
+
+ChartJS.register(ArcElement, Tooltip, Legend, Title);
+
+function HotelsParClassementChart({ hotels, theme }) {
+  // 1. Préparer les données : compter les hôtels par classement
+  const dataParClassement = React.useMemo(() => {
+    return hotels.reduce((acc, hotel) => {
+      const classement = hotel.classement || 'Non spécifié';
+      acc[classement] = (acc[classement] || 0) + 1;
+      return acc;
+    }, {});
+  }, [hotels]);
+
+  const labels = Object.keys(dataParClassement);
+  const dataCounts = Object.values(dataParClassement);
+
+  // 2. Détecter le mode sombre et définir les couleurs
+  const isDarkMode = theme === 'dark';
+  const titleColor = isDarkMode ? '#F8F9FA' : '#303841';
+  const legendColor = isDarkMode ? '#ADB5BD' : '#8A959E';
+  const tooltipBodyColor = isDarkMode ? '#F8F9FA' : '#303841';
+  const tooltipTitleColor = isDarkMode ? '#F8F9FA' : '#303841';
+
+  // Palette de couleurs - Utilise des couleurs distinctes
+  const backgroundColors = [
+    'rgba(62, 140, 170, 0.7)',  // primary
+    'rgba(232, 140, 80, 0.7)',  // accent
+    'rgba(226, 209, 181, 0.8)', // secondary
+    'rgba(94, 166, 192, 0.7)',  // primary-light
+    'rgba(242, 170, 122, 0.7)', // accent-light
+  ];
+  const borderColors = backgroundColors.map(color => color.replace('0.7', '1').replace('0.8', '1'));
+
+  // 3. Configurer les données pour Chart.js
+  const chartData = React.useMemo(() => ({
+    labels: labels,
+    datasets: [
+      {
+        label: 'Nombre d\'hôtels',
+        data: dataCounts,
+        backgroundColor: backgroundColors.slice(0, labels.length),
+        borderColor: borderColors.slice(0, labels.length),
+        borderWidth: 1,
+      },
+    ],
+  }), [labels, dataCounts]);
+
+  // 4. Configurer les options du graphique
+  const chartOptions = React.useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          color: legendColor,
+          font: {
+            family: "'Open Sans', sans-serif",
+            size: 14
+          },
+          boxWidth: 15,
+          padding: 20
+        }
+      },
+      title: {
+        display: true,
+        text: 'Répartition des Hôtels par Classement',
+        color: titleColor,
+        font: {
+          family: "'Playfair Display', serif",
+          size: 24
+        },
+        padding: {
+          top: 10,
+          bottom: 20
+        }
+      },
+      tooltip: {
+        titleColor: tooltipTitleColor,
+        bodyColor: tooltipBodyColor,
+        backgroundColor: isDarkMode ? 'rgba(48, 56, 65, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+        borderWidth: 1,
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.parsed || 0;
+            const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+            return `${label}: ${value} (${percentage}%)`;
+          }
+        },
+        bodyFont: {
+          family: "'Open Sans', sans-serif"
+        },
+        titleFont: {
+          family: "'Open Sans', sans-serif"
+        }
+      }
+    },
+  }), [isDarkMode, titleColor, legendColor, tooltipTitleColor, tooltipBodyColor]);
+
+  return (
+    <div className="my-8 p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md relative h-96 md:h-[450px]">
+      <Pie options={chartOptions} data={chartData} />
+    </div>
+  );
+}
+
+export default HotelsParClassementChart;
+
+--- END OF FILE: src/components/visualizations/HotelsParClassementChart.jsx ---
+
+--- START OF FILE: src/index.css ---
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Vide pour le moment */
+}
+
+--- END OF FILE: src/index.css ---
+
+--- START OF FILE: src/main.jsx ---
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css' // C'est ici que les directives Tailwind sont injectées
+import 'leaflet/dist/leaflet.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+--- END OF FILE: src/main.jsx ---
+
+--- START OF FILE: src/pages/EquipementsPage.jsx ---
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { fetchEquipements } from '../services/equipementService';
+import CoutParQuartierChart from '../components/visualizations/CoutParQuartierChart';
+import EquipementsMap from '../components/maps/EquipementsMap';
+
+function EquipementsPage({ theme }) {
   const [equipements, setEquipements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Add a state variable to trigger chart re-render if needed
   const [chartKey, setChartKey] = useState(0);
+  const [sortConfig, setSortConfig] = useState({ key: 'projet_nom', direction: 'ascending' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedQuartier, setSelectedQuartier] = useState('');
+  const [minCost, setMinCost] = useState('');
+  const [maxCost, setMaxCost] = useState('');
 
   useEffect(() => {
     async function loadEquipements() {
       setIsLoading(true);
       setError(null);
-
-      const { data, error: fetchError } = await fetchEquipements(); // Renamed error variable
+      const { data, error: fetchError } = await fetchEquipements();
 
       if (fetchError) {
         setError(fetchError.message);
         setEquipements([]);
       } else {
-        setEquipements(data || []);
-        // Update chart key to potentially force re-render after data is loaded
+        const validData = data || [];
+        setEquipements(validData);
         setChartKey(prevKey => prevKey + 1);
       }
       setIsLoading(false);
     }
-
     loadEquipements();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
+
+  const quartierOptions = useMemo(() => {
+    const quartiers = new Set(equipements.map(e => e.quartier || 'Non spécifié'));
+    return ['', ...Array.from(quartiers).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))];
+  }, [equipements]);
+
+  const filteredAndSortedEquipements = useMemo(() => {
+    console.log("Filtering/Sorting Equipements...", { searchTerm, selectedQuartier, minCost, maxCost, sortConfig });
+
+    const minCostValue = minCost === '' ? null : parseFloat(minCost);
+    const maxCostValue = maxCost === '' ? null : parseFloat(maxCost);
+
+    let filtered = equipements.filter(equip => {
+      const nameMatch = equip.projet_nom && equip.projet_nom.toLowerCase().includes(searchTerm.toLowerCase());
+      const actualQuartier = equip.quartier || 'Non spécifié';
+      const quartierMatch = selectedQuartier === '' || actualQuartier === selectedQuartier;
+      const cost = typeof equip.cout_total === 'number' ? equip.cout_total : null;
+      const minCostMatch = minCostValue === null || isNaN(minCostValue) || (cost !== null && cost >= minCostValue);
+      const maxCostMatch = maxCostValue === null || isNaN(maxCostValue) || (cost !== null && cost <= maxCostValue);
+
+      return nameMatch && quartierMatch && minCostMatch && maxCostMatch;
+    });
+
+    if (sortConfig.key !== null) {
+      filtered.sort((a, b) => {
+        const valA = a[sortConfig.key];
+        const valB = b[sortConfig.key];
+        let comparison = 0;
+
+        if (valA === null || valA === undefined) comparison = -1;
+        else if (valB === null || valB === undefined) comparison = 1;
+        else if (typeof valA === 'number' && typeof valB === 'number') { comparison = valA - valB; }
+        else if (typeof valA === 'string' && typeof valB === 'string') { comparison = valA.localeCompare(valB, 'fr', { sensitivity: 'base' }); }
+        else { comparison = String(valA).localeCompare(String(valB), 'fr', { sensitivity: 'base' }); }
+
+        return sortConfig.direction === 'descending' ? (comparison * -1) : comparison;
+      });
+    }
+    return filtered;
+  }, [equipements, searchTerm, selectedQuartier, minCost, maxCost, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) {
+      return <span className="opacity-30 ml-1">↕</span>;
+    }
+    return sortConfig.direction === 'ascending' ?
+      <span className="opacity-80 ml-1">▲</span> :
+      <span className="opacity-80 ml-1">▼</span>;
+  };
 
   let content;
   if (isLoading) {
@@ -264,102 +998,845 @@ function EquipementsPage() {
       <div className="text-center">
         <p className="text-red-500 text-lg font-body">Erreur lors du chargement: {error}</p>
         <button
-          onClick={loadEquipements} // Removed () => loadEquipements() as it's not needed here
+          onClick={() => window.location.reload()}
           className="mt-4 inline-block bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
         >
           Réessayer
         </button>
       </div>
     );
-  } else if (equipements.length === 0) {
-    content = (
-      <div className="text-center">
-        <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-lg font-body">
-          Aucun équipement trouvé.
-        </p>
-      </div>
-    );
   } else {
     content = (
-      <>
-        <div className="overflow-x-auto">
-          {/* Updated table styles */}
-          <table className="min-w-full bg-neutral-surface-light dark:bg-neutral-surface-dark border border-secondary-dark dark:border-neutral-medium-gray table-auto">
-            {/* Updated thead styles */}
-            <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
-              <tr>
-                {/* Updated th styles */}
-                <th className="py-2 px-4 border-b text-left text-sm font-heading text-neutral-text-light dark:text-neutral-text-dark sticky top-0 bg-neutral-light-sand dark:bg-neutral-bg-alt-dark z-10">
-                  Nom du Projet
-                </th>
-                <th className="py-2 px-4 border-b text-left text-sm font-heading text-neutral-text-light dark:text-neutral-text-dark sticky top-0 bg-neutral-light-sand dark:bg-neutral-bg-alt-dark z-10">
-                  Quartier
-                </th>
-                <th className="py-2 px-4 border-b text-left text-sm font-heading text-neutral-text-light dark:text-neutral-text-dark sticky top-0 bg-neutral-light-sand dark:bg-neutral-bg-alt-dark z-10">
-                  Composantes
-                </th>
-                <th className="py-2 px-4 border-b text-right text-sm font-heading text-neutral-text-light dark:text-neutral-text-dark sticky top-0 bg-neutral-light-sand dark:bg-neutral-bg-alt-dark z-10">
-                  Coût Total (Dhs)
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {equipements.map((equipement) => (
-                // Updated tr styles
-                <tr
-                  key={equipement.id}
-                  className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark border-b border-secondary-dark dark:border-neutral-medium-gray"
-                >
-                  {/* Updated td styles */}
-                  <td className="py-2 px-4 text-sm font-body text-neutral-text-light dark:text-neutral-text-dark">
-                    {equipement.projet_nom || 'N/A'}
-                  </td>
-                  <td className="py-2 px-4 text-sm font-body text-neutral-text-light dark:text-neutral-text-dark">
-                    {equipement.quartier || 'N/A'}
-                  </td>
-                  <td className="py-2 px-4 text-sm font-body text-neutral-text-light dark:text-neutral-text-dark">
-                    {/* Line break handling */}
-                    {equipement.composantes ? (
-                      equipement.composantes.split('\\n').map((line, index) => (
-                        <span key={index} className="block">{line.trim()}</span>
-                      ))
-                    ) : (
-                      'N/A'
-                    )}
-                  </td>
-                  <td className="py-2 px-4 text-sm font-body text-neutral-text-light dark:text-neutral-text-dark text-right">
-                    {typeof equipement.cout_total === 'number'
-                      ? equipement.cout_total.toLocaleString('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                      : equipement.cout_total || 'N/A'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="space-y-10">
+        <div className="p-4 sm:p-6 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
+          <h3 className="text-xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+            Filtrer les Équipements
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="search-equipement" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+                Rechercher par nom :
+              </label>
+              <input
+                type="text"
+                id="search-equipement"
+                placeholder="Nom du projet..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
+              />
+            </div>
+            <div>
+              <label htmlFor="filter-quartier" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+                Filtrer par quartier :
+              </label>
+              <select
+                id="filter-quartier"
+                value={selectedQuartier}
+                onChange={(e) => setSelectedQuartier(e.target.value)}
+                className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark"
+              >
+                {quartierOptions.map(quartier => (
+                  <option key={quartier} value={quartier}>
+                    {quartier === '' ? 'Tous les quartiers' : quartier}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="md:col-span-1 grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="filter-min-cost" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+                  Coût Min (MAD) :
+                </label>
+                <input
+                  type="number"
+                  id="filter-min-cost"
+                  placeholder="Min"
+                  min="0"
+                  value={minCost}
+                  onChange={(e) => setMinCost(e.target.value)}
+                  className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
+                />
+              </div>
+              <div>
+                <label htmlFor="filter-max-cost" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+                  Coût Max (MAD) :
+                </label>
+                <input
+                  type="number"
+                  id="filter-max-cost"
+                  placeholder="Max"
+                  min="0"
+                  value={maxCost}
+                  onChange={(e) => setMaxCost(e.target.value)}
+                  className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 text-right">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedQuartier('');
+                setMinCost('');
+                setMaxCost('');
+                setSortConfig({ key: 'projet_nom', direction: 'ascending' });
+              }}
+              className="text-sm text-secondary dark:text-secondary-light hover:underline font-medium"
+              disabled={!searchTerm && !selectedQuartier && !minCost && !maxCost}
+            >
+              Réinitialiser tous les filtres
+            </button>
+          </div>
         </div>
 
-        {/* Pass key to chart to force re-render */}
-        <CoutParQuartierChart key={chartKey} equipements={equipements} />
-      </>
+        <p className="text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark italic">
+          {filteredAndSortedEquipements.length} équipement(s) trouvé(s).
+        </p>
+
+        {equipements.length === 0 && !isLoading && (
+          <div className="text-center py-10">
+            <p className="text-lg font-medium text-neutral-text-light dark:text-neutral-text-dark">Aucun équipement trouvé.</p>
+          </div>
+        )}
+
+        {equipements.length > 0 && filteredAndSortedEquipements.length === 0 && (
+          <div className="text-center py-10">
+            <p className="text-lg font-medium text-neutral-text-light dark:text-neutral-text-dark">Aucun équipement ne correspond à vos critères.</p>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedQuartier('');
+                setMinCost('');
+                setMaxCost('');
+              }}
+              className="mt-4 inline-block text-sm text-primary dark:text-primary-light hover:underline"
+            >
+              Réinitialiser les filtres
+            </button>
+          </div>
+        )}
+
+        {filteredAndSortedEquipements.length > 0 && (
+          <>
+            <div>
+              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+                Carte des Équipements ({filteredAndSortedEquipements.length})
+              </h3>
+              <EquipementsMap equipements={filteredAndSortedEquipements} />
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+                Coût Total par Quartier (Tous)
+              </h3>
+              <CoutParQuartierChart key={chartKey} equipements={equipements} theme={theme} />
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+                Détails des Équipements ({filteredAndSortedEquipements.length})
+              </h3>
+              <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
+                <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-fixed">
+                  <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
+                    <tr>
+                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[30%] sm:w-[25%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
+                          onClick={() => requestSort('projet_nom')}>
+                        Nom du Projet {getSortIcon('projet_nom')}
+                      </th>
+                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[15%] sm:w-[15%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
+                          onClick={() => requestSort('quartier')}>
+                        Quartier {getSortIcon('quartier')}
+                      </th>
+                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[35%] sm:w-[40%]">
+                        Composantes
+                      </th>
+                      <th scope="col" className="py-3 px-4 text-right text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[20%] sm:w-[20%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
+                          onClick={() => requestSort('cout_total')}>
+                        Coût Total (MAD) {getSortIcon('cout_total')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-bg-alt-light dark:divide-neutral-bg-alt-dark">
+                    {filteredAndSortedEquipements.map((equipement) => (
+                      <tr key={equipement.id} className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-150">
+                        <td className="py-3 px-4 text-sm font-medium text-neutral-text-light dark:text-neutral-text-dark break-words">
+                          {equipement.projet_nom || 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark break-words">
+                          {equipement.quartier || 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark break-words">
+                          {equipement.composantes ? (
+                            equipement.composantes.split('\n').map((line, index) => (
+                              <span key={index} className="block">{line.trim()}</span>
+                            ))
+                          ) : 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-right">
+                          {typeof equipement.cout_total === 'number'
+                            ? equipement.cout_total.toLocaleString('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+                            : equipement.cout_total || 'N/A'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     );
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
         Équipements Sportifs
       </h2>
       {content}
-      <Link
-        to="/"
-        className="mt-4 inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
-      >
-        Retour à l'accueil
-      </Link>
+      <div className="mt-10 text-center">
+        <Link
+          to="/"
+          className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
+        >
+          Retour à l'accueil
+        </Link>
+      </div>
     </div>
   );
 }
 
+export default EquipementsPage;
+
+--- END OF FILE: src/pages/EquipementsPage.jsx ---
+
+--- START OF FILE: src/pages/HomePage.jsx ---
+import { Link } from 'react-router-dom';
+
+function HomePage() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+      <h1 className="text-4xl md:text-5xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
+        Bienvenue sur Open Data Agadir
+      </h1>
+      <p className="text-xl md:text-2xl font-body text-neutral-text-light dark:text-neutral-text-dark mb-12">
+        Découvrez et explorez les données ouvertes de la ville d'Agadir.
+      </p>
+      <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-4">
+        <Link
+          to="/equipements"
+          className="inline-block w-full sm:w-auto bg-primary hover:bg-primary-light text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200 text-base"
+        >
+          Explorer les Équipements
+        </Link>
+        <Link
+          to="/hotels"
+          className="inline-block w-full sm:w-auto bg-accent hover:bg-accent-dark text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200 text-base"
+        >
+          Découvrir les Hôtels
+        </Link>
+        <Link
+          to="/jardins"
+          className="inline-block w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200 text-base"
+        >
+          Visiter les Jardins
+        </Link>
+        <Link
+          to="/lignes-bus"
+          className="inline-block w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200 text-base"
+        >
+          Explorer les Lignes de Bus
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default HomePage;
+
+--- END OF FILE: src/pages/HomePage.jsx ---
+
+--- START OF FILE: src/pages/HotelsPage.jsx ---
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { fetchHotels } from '../services/hotelService';
+import HotelsParClassementChart from '../components/visualizations/HotelsParClassementChart';
+import HotelsMap from '../components/maps/HotelsMap';
+
+function HotelsPage({ theme }) {
+  const [hotels, setHotels] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // New filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClassement, setSelectedClassement] = useState('');
+
+  // --- NOUVEL ÉTAT POUR LE TRI ---
+  const [sortConfig, setSortConfig] = useState({ key: 'nom', direction: 'ascending' });
+  // --- FIN NOUVEL ÉTAT TRI ---
+
+  useEffect(() => {
+    async function loadHotels() {
+      setIsLoading(true);
+      setError(null);
+      const { data, error: fetchError } = await fetchHotels();
+
+      if (fetchError) {
+        setError(fetchError.message);
+        setHotels([]);
+      } else {
+        setHotels(data || []);
+      }
+      setIsLoading(false);
+    }
+    loadHotels();
+  }, []);
+
+  // --- LOGIQUE DE FILTRAGE ET TRI ---
+  const sortedAndFilteredHotels = useMemo(() => {
+    let filtered = hotels.filter(hotel => {
+      const nameMatch = hotel.nom && hotel.nom.toLowerCase().includes(searchTerm.toLowerCase());
+      const actualClassement = hotel.classement || 'Non spécifié';
+      const classementMatchStrict = selectedClassement === '' || actualClassement === selectedClassement;
+      return nameMatch && classementMatchStrict;
+    });
+
+    if (sortConfig.key !== null) {
+      filtered.sort((a, b) => {
+        const valA = a[sortConfig.key] || '';
+        const valB = b[sortConfig.key] || '';
+
+        let comparison = 0;
+        if (typeof valA === 'string' && typeof valB === 'string') {
+          comparison = valA.localeCompare(valB, 'fr', { sensitivity: 'base' });
+        } else {
+          if (valA < valB) { comparison = -1; }
+          if (valA > valB) { comparison = 1; }
+        }
+
+        return sortConfig.direction === 'descending' ? (comparison * -1) : comparison;
+      });
+    }
+    console.log("Sorting/Filtering hotels...", { searchTerm, selectedClassement, sortConfig });
+    return filtered;
+  }, [hotels, searchTerm, selectedClassement, sortConfig]);
+
+  // --- OPTIONS DE CLASSEMENT (reste identique) ---
+  const classementOptions = useMemo(() => {
+    const classements = new Set(hotels.map(h => h.classement || 'Non spécifié'));
+    return ['', ...Array.from(classements).sort()];
+  }, [hotels]);
+
+  // --- Fonction pour demander le tri ---
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // --- Fonction pour obtenir l'icône de tri ---
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) {
+      return <span className="opacity-30 ml-1">↕</span>;
+    }
+    return sortConfig.direction === 'ascending' ?
+      <span className="opacity-80 ml-1">▲</span> :
+      <span className="opacity-80 ml-1">▼</span>;
+  };
+
+  let content;
+  if (isLoading) {
+    content = (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  } else if (error) {
+    content = (
+      <div className="text-center">
+        <p className="text-red-500 text-lg font-body">Erreur lors du chargement: {error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 inline-block bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="space-y-10">
+        {/* Filters section */}
+        <div className="p-4 sm:p-6 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
+          <h3 className="text-xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+            Filtrer les Hôtels
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Search field */}
+            <div>
+              <label htmlFor="search-hotel" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+                Rechercher par nom :
+              </label>
+              <input
+                type="text"
+                id="search-hotel"
+                placeholder="Entrez un nom d'hôtel..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
+              />
+            </div>
+            {/* Classification filter */}
+            <div>
+              <label htmlFor="filter-classement" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+                Filtrer par classement :
+              </label>
+              <select
+                id="filter-classement"
+                value={selectedClassement}
+                onChange={(e) => setSelectedClassement(e.target.value)}
+                className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark"
+              >
+                <option value="">Tous les classements</option>
+                {classementOptions.slice(1).map(classement => (
+                  <option key={classement} value={classement}>
+                    {classement}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Display result count */}
+        <p className="text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark italic">
+          {sortedAndFilteredHotels.length} hôtel(s) trouvé(s).
+        </p>
+
+        {/* No results message */}
+        {hotels.length > 0 && sortedAndFilteredHotels.length === 0 && (
+          <div className="text-center py-10">
+            <p className="text-lg font-medium text-neutral-text-light dark:text-neutral-text-dark">Aucun hôtel ne correspond à vos critères.</p>
+            <button
+              onClick={() => { setSearchTerm(''); setSelectedClassement(''); }}
+              className="mt-4 inline-block text-sm text-primary dark:text-primary-light hover:underline"
+            >
+              Réinitialiser les filtres
+            </button>
+          </div>
+        )}
+
+        {/* Display components only if there are filtered results */}
+        {sortedAndFilteredHotels.length > 0 && (
+          <>
+            {/* Map section */}
+            <div>
+              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+                Carte des Hôtels ({sortedAndFilteredHotels.length})
+              </h3>
+              <HotelsMap hotels={sortedAndFilteredHotels} />
+            </div>
+
+            {/* Chart section */}
+            <div>
+              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+                Répartition par Classement ({sortedAndFilteredHotels.length} affichés)
+              </h3>
+              <HotelsParClassementChart hotels={sortedAndFilteredHotels} theme={theme} />
+            </div>
+
+            {/* List section */}
+            <div>
+              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+                Liste Détaillée des Hôtels ({sortedAndFilteredHotels.length})
+              </h3>
+              <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
+                <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-auto">
+                  <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
+                    <tr>
+                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
+                          onClick={() => requestSort('nom')}>
+                        Nom {getSortIcon('nom')}
+                      </th>
+                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-dark"
+                          onClick={() => requestSort('classement')}>
+                        Classement {getSortIcon('classement')}
+                      </th>
+                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider">
+                        Adresse
+                      </th>
+                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider">
+                        Téléphone
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-bg-alt-light dark:divide-neutral-bg-alt-dark">
+                    {sortedAndFilteredHotels.map((hotel) => (
+                      <tr key={hotel.id} className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-150">
+                        <td className="py-3 px-4 whitespace-nowrap text-sm font-medium text-neutral-text-light dark:text-neutral-text-dark">
+                          {hotel.nom || 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                          {hotel.classement || 'Non spécifié'}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                          {hotel.adresse || 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                          {hotel.telephone || 'N/A'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
+        Hôtels d'Agadir
+      </h2>
+      {content}
+      <div className="mt-10 text-center">
+        <Link
+          to="/"
+          className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
+        >
+          Retour à l'accueil
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default HotelsPage;
+
+--- END OF FILE: src/pages/HotelsPage.jsx ---
+
+--- START OF FILE: src/pages/JardinsPage.jsx ---
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { fetchJardins } from '../services/jardinService';
+import JardinsMap from '../components/maps/JardinsMap';
+
+// Helper to parse equipements string
+const parseEquipements = (equipementsString) => {
+    if (!equipementsString) return [];
+    return equipementsString.split('\n').map(e => e.trim()).filter(e => e);
+};
+
+function JardinsPage({ theme }) {
+  const [jardins, setJardins] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function loadJardins() {
+      setIsLoading(true);
+      setError(null);
+      const { data, error: fetchError } = await fetchJardins();
+      if (fetchError) {
+        setError(fetchError.message);
+        setJardins([]);
+      } else {
+        setJardins(data || []);
+      }
+      setIsLoading(false);
+    }
+    loadJardins();
+  }, []);
+
+  const filteredJardins = useMemo(() => {
+    return jardins;
+  }, [jardins]);
+
+  let content;
+  if (isLoading) {
+    content = <div className="flex justify-center items-center p-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
+  } else if (error) {
+    content = <div className="text-center text-red-500 p-10">Erreur: {error}</div>;
+  } else if (filteredJardins.length === 0) {
+    content = <div className="text-center text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-10">Aucun jardin trouvé.</div>;
+  } else {
+    content = (
+      <div className="space-y-8">
+        {/* Map Display */}
+        <div>
+          <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+            Carte des Jardins ({filteredJardins.length})
+          </h3>
+          <JardinsMap jardins={filteredJardins} />
+        </div>
+
+        {/* Cards Display */}
+        <div>
+          <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
+            Liste des Jardins ({filteredJardins.length})
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredJardins.map(jardin => (
+              <div key={jardin.id} className="bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md overflow-hidden flex flex-col">
+                {/* Image */}
+                {jardin.image_url && (
+                  <img src={jardin.image_url} alt={`Image de ${jardin.nom}`} className="w-full h-48 object-cover" />
+                )}
+                {/* Card Body */}
+                <div className="p-4 flex flex-col flex-grow">
+                  <h4 className="text-lg font-heading font-bold text-primary dark:text-primary-light mb-2">{jardin.nom}</h4>
+                  <p className="text-sm font-body text-neutral-text-light dark:text-neutral-text-dark mb-3 flex-grow">
+                    {jardin.description}
+                  </p>
+                  {/* Details Section */}
+                  <div className="text-xs border-t border-neutral-light-sand dark:border-neutral-bg-alt-dark pt-3 mt-auto space-y-1">
+                    <p><strong className="font-semibold">Quartier:</strong> {jardin.quartier || 'N/A'}</p>
+                    <p><strong className="font-semibold">Horaires:</strong> {jardin.horaires || 'N/A'}</p>
+                    {parseEquipements(jardin.equipements).length > 0 && (
+                      <div>
+                        <strong className="font-semibold">Équipements:</strong>
+                        <ul className="list-disc list-inside pl-2">
+                          {parseEquipements(jardin.equipements).map((item, index) => (
+                            <li key={index}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
+        Jardins Publics d'Agadir
+      </h2>
+      {content}
+      <div className="mt-10 text-center">
+        <Link to="/" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200">
+          Retour à l'accueil
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default JardinsPage;
+
+--- END OF FILE: src/pages/JardinsPage.jsx ---
+
+--- START OF FILE: src/pages/LignesBusPage.jsx ---
+// src/pages/LignesBusPage.jsx
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { fetchLignesBus } from '../services/busService';
+
+function LignesBusPage({ theme }) {
+  const [lignesBus, setLignesBus] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'numero_ligne', direction: 'ascending' });
+
+  useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      const { data, error: fetchError } = await fetchLignesBus();
+      console.log("Fetched data from Supabase:", data); // Log fetched data
+      setLignesBus(data || []);
+      setError(fetchError?.message || null);
+      setIsLoading(false);
+    }
+    loadData();
+  }, []);
+
+  const filteredAndSortedLignes = useMemo(() => {
+    let filtered = lignesBus.filter(ligne => {
+      const searchLower = searchTerm.toLowerCase();
+      // Using optional chaining and nullish coalescing for safety
+      return (
+        (ligne?.numero_ligne ?? '').toLowerCase().includes(searchLower) ||
+        (ligne?.designation ?? '').toLowerCase().includes(searchLower) ||
+        (ligne?.detail_depart ?? '').toLowerCase().includes(searchLower) ||
+        (ligne?.detail_arrivee ?? '').toLowerCase().includes(searchLower)
+      );
+    });
+
+    if (sortConfig.key !== null) {
+      const extractLineNumber = (numStr) => parseInt(numStr?.substring(1) || '0', 10);
+
+      filtered.sort((a, b) => {
+        const key = sortConfig.key;
+        let comparison = 0;
+
+        if (key === 'numero_ligne') {
+          comparison = extractLineNumber(a[key]) - extractLineNumber(b[key]);
+        } else {
+          // Using nullish coalescing for safety
+          const valA = a[key] ?? '';
+          const valB = b[key] ?? '';
+          comparison = valA.localeCompare(valB, 'fr', { sensitivity: 'base' });
+        }
+        return sortConfig.direction === 'descending' ? (comparison * -1) : comparison;
+      });
+    }
+    // console.log("Data after filter/sort:", filtered); // Optional log
+    return filtered;
+  }, [lignesBus, searchTerm, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) return <span className="opacity-30 ml-1">↕</span>;
+    return sortConfig.direction === 'ascending' ? <span className="opacity-80 ml-1">▲</span> : <span className="opacity-80 ml-1">▼</span>;
+  };
+
+  let content;
+  if (isLoading) {
+    content = (
+      <div className="flex justify-center items-center p-10">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  } else if (error) {
+    content = (
+      <div className="text-center text-red-500 p-10">
+        Erreur: {error}
+      </div>
+    );
+  } else {
+    content = (
+      <div className="space-y-6">
+        {/* Search Bar */}
+        <div>
+          <label htmlFor="search-ligne" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+            Rechercher :
+          </label>
+          <input
+            type="text"
+            id="search-ligne"
+            placeholder="Numéro, désignation, détail..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-1/2 lg:w-1/3 p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
+          />
+        </div>
+
+        {/* Result Count */}
+        <p className="text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark italic">
+          {filteredAndSortedLignes.length} ligne(s) trouvée(s).
+        </p>
+
+        {/* No Results Message */}
+        {lignesBus.length > 0 && filteredAndSortedLignes.length === 0 && (
+          <div className="text-center py-10">
+            <p className="text-lg font-medium text-neutral-text-light dark:text-neutral-text-dark">
+              Aucune ligne ne correspond à votre recherche.
+            </p>
+          </div>
+        )}
+
+        {/* Table */}
+        {filteredAndSortedLignes.length > 0 && (
+          <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
+            <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-auto">
+              <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
+                <tr>
+                  <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
+                      onClick={() => requestSort('numero_ligne')}>
+                    Ligne {getSortIcon('numero_ligne')}
+                  </th>
+                  <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
+                      onClick={() => requestSort('designation')}>
+                    Désignation {getSortIcon('designation')}
+                  </th>
+                  <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
+                      onClick={() => requestSort('detail_depart')}>
+                    Détail Départ {getSortIcon('detail_depart')}
+                  </th>
+                  <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
+                      onClick={() => requestSort('detail_arrivee')}>
+                    Détail Arrivée {getSortIcon('detail_arrivee')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-bg-alt-light dark:divide-neutral-bg-alt-dark">
+                {filteredAndSortedLignes.map((ligne) => {
+                  // --- AJOUT DU CONSOLE LOG POUR DEBUG ---
+                  console.log(`Rendering ligne ${ligne.numero_ligne}:`, ligne);
+                  // --- FIN CONSOLE LOG ---
+                  return ( // Ensure return statement is here
+                    <tr key={ligne.numero_ligne} className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-150">
+                      <td className="py-3 px-4 whitespace-nowrap text-sm font-semibold text-neutral-text-light dark:text-neutral-text-dark">
+                        {ligne.numero_ligne}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-neutral-text-light dark:text-neutral-text-dark">
+                        {/* Using nullish coalescing for safety */}
+                        {ligne.designation ?? '-'}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                        {ligne.detail_depart ?? '-'}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                        {ligne.detail_arrivee ?? '-'}
+                      </td>
+                    </tr>
+                  ); // Ensure closing parenthesis for return is here
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
+        Lignes de Bus d'Agadir
+      </h2>
+      {content}
+      <div className="mt-10 text-center">
+        <Link
+          to="/"
+          className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
+        >
+          Retour à l'accueil
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default LignesBusPage;
+--- END OF FILE: src/pages/LignesBusPage.jsx ---
+
+--- START OF FILE: src/pages/NotFoundPage.jsx ---
+import { Link } from 'react-router-dom';
 
 function NotFoundPage() {
   return (
@@ -380,273 +1857,34 @@ function NotFoundPage() {
   );
 }
 
-function App() {
-  return (
-    <Router>
-      <div className="min-h-screen bg-neutral-bg-light dark:bg-neutral-bg-dark transition-colors duration-200">
-        <nav className="bg-primary dark:bg-neutral-surface-dark">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex">
-                <Link
-                  to="/"
-                  className="flex items-center text-white hover:text-white font-semibold"
-                >
-                  <span className="text-xl font-heading">Portail Opendata Agadir</span>
-                </Link>
-              </div>
-              <div className="flex items-center space-x-4">
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
-        </nav>
+export default NotFoundPage;
 
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/equipements" element={<EquipementsPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
+--- END OF FILE: src/pages/NotFoundPage.jsx ---
 
-        <footer className="bg-neutral-surface-light dark:bg-neutral-surface-dark">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-center">
-              {new Date().getFullYear()} Portail Opendata Agadir. Tous droits réservés.
-            </p>
-          </div>
-        </footer>
-      </div>
-    </Router>
-  );
+--- START OF FILE: src/services/busService.js ---
+import { supabase } from '../supabaseClient';
+
+/**
+ * Récupère toutes les lignes de bus depuis Supabase.
+ * @returns {Promise<{data: Array|null, error: Object|null}>} Un objet avec les données ou une erreur.
+ */
+export async function fetchLignesBus() {
+  console.log('Attempting to fetch lignes_bus...');
+  const { data, error } = await supabase
+    .from('lignes_bus')
+    .select('*')
+    .order('numero_ligne', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching lignes_bus:', error);
+  } else {
+    console.log('Lignes de bus fetched successfully:', data);
+  }
+
+  return { data, error };
 }
 
-export default App;
---- END OF FILE: src/App.jsx ---
-
---- START OF FILE: src/components/ThemeToggle.jsx ---
-import { useEffect } from 'react';
-
-function ThemeToggle() {
-  // Fonction pour basculer le thème
-  const toggleTheme = () => {
-    const html = document.documentElement;
-    const isDark = html.classList.contains('dark');
-    
-    // Basculer la classe dark
-    html.classList.toggle('dark');
-    
-    // Sauvegarder la préférence dans localStorage
-    localStorage.setItem('theme', isDark ? 'light' : 'dark');
-  };
-
-  // Charger la préférence du thème au montage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  return (
-    <button
-      onClick={toggleTheme}
-      className="text-white hover:text-white px-4 py-2 flex items-center space-x-2"
-      aria-label="Toggle dark mode"
-    >
-      {document.documentElement.classList.contains('dark') ? (
-        <span>☀️</span>
-      ) : (
-        <span>🌙</span>
-      )}
-      <span className="text-sm">Mode Sombre</span>
-    </button>
-  );
-}
-
-export default ThemeToggle;
-
---- END OF FILE: src/components/ThemeToggle.jsx ---
-
---- START OF FILE: src/components/visualizations/CoutParQuartierChart.jsx ---
-import React from 'react';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-
-// Enregistrer les composants nécessaires de Chart.js
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-function CoutParQuartierChart({ equipements }) {
-  // 1. Préparer les données pour le graphique
-  const dataParQuartier = equipements.reduce((acc, equipement) => {
-    const quartier = equipement.quartier || 'Non spécifié';
-    // S'assurer que cout_total est un nombre, sinon 0
-    const cout = typeof equipement.cout_total === 'number' ? equipement.cout_total : (parseFloat(equipement.cout_total) || 0);
-
-    if (!acc[quartier]) {
-      acc[quartier] = 0;
-    }
-    acc[quartier] += cout;
-    return acc;
-  }, {});
-
-  // Trier les quartiers par coût décroissant pour un meilleur affichage
-  const sortedQuartiers = Object.entries(dataParQuartier)
-    .sort(([, coutA], [, coutB]) => coutB - coutA)
-    .map(([quartier]) => quartier);
-
-  const sortedCouts = sortedQuartiers.map(quartier => dataParQuartier[quartier]);
-
-  // Ajouter la détection du mode sombre
-  const isDarkMode = document.documentElement.classList.contains('dark');
-  const titleColor = isDarkMode ? '#F8F9FA' : '#303841'; // Using neutral-text-dark / neutral-text-light hex codes
-  const textColor = isDarkMode ? '#F8F9FA' : '#303841'; // For legend and ticks
-  const gridColor = isDarkMode ? 'rgba(248, 249, 250, 0.1)' : 'rgba(48, 56, 65, 0.1)'; // Lighter grid for dark, darker for light
-  const tooltipBodyColor = isDarkMode ? '#F8F9FA' : '#303841';
-  const tooltipTitleColor = isDarkMode ? '#F8F9FA' : '#303841';
-
-  // AJOUTER CETTE LIGNE POUR LE DÉBOGAGE :
-  console.log('Données pour le graphique (horizontal):', { labels: sortedQuartiers, data: sortedCouts });
-
-  // 2. Configurer les données pour Chart.js
-  // Utilisation des couleurs primaires définies dans Tailwind (via leurs valeurs HEX)
-  const chartData = {
-    labels: sortedQuartiers, // Noms des quartiers sur l'axe Y maintenant
-    datasets: [
-      {
-        label: 'Coût Total (MAD)',
-        data: sortedCouts, // Coûts sur l'axe X maintenant
-        backgroundColor: 'rgba(62, 140, 170, 0.6)', // Primary DEFAULT avec transparence
-        borderColor: 'rgba(62, 140, 170, 1)', // Primary DEFAULT
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  // 3. Configurer les options du graphique
-  const chartOptions = {
-    indexAxis: 'y',
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-             color: textColor,
-             font: {
-                family: "'Open Sans', sans-serif"
-             }
-        }
-      },
-      title: {
-        display: true,
-        text: 'Coût Total des Équipements Sportifs par Quartier',
-        color: titleColor,
-        font: {
-            family: "'Playfair Display', serif",
-            size: 18
-        },
-        padding: {
-             top: 10,
-             bottom: 20
-        }
-      },
-      tooltip: {
-         titleColor: tooltipTitleColor,
-         bodyColor: tooltipBodyColor,
-         callbacks: {
-            label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) {
-                    label += ': ';
-                }
-                if (context.parsed.x !== null) {
-                    label += new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(context.parsed.x);
-                }
-                return label;
-            }
-         },
-         bodyFont: {
-             family: "'Open Sans', sans-serif"
-         }
-      }
-    },
-    scales: {
-        x: {
-            beginAtZero: true,
-            ticks: {
-                color: textColor,
-                font: {
-                    family: "'Open Sans', sans-serif"
-                }
-            },
-            grid: {
-                color: gridColor
-            }
-        },
-        y: {
-             ticks: {
-                 color: textColor,
-                 font: {
-                    family: "'Open Sans', sans-serif",
-                    size: 12
-                 }
-             },
-             grid: {
-                  display: false
-             }
-        }
-    },
-  };
-
-  // 4. Rendre le composant Bar de react-chartjs-2
-  // Donner une hauteur fixe ou relative au conteneur pour que maintainAspectRatio: false fonctionne bien
-  // Increased height to h-[40rem] or more if needed for many labels
-  return (
-    <div className="my-8 p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md relative h-[40rem]">
-        <Bar options={chartOptions} data={chartData} />
-    </div>
-  );
-}
-
-export default CoutParQuartierChart;
---- END OF FILE: src/components/visualizations/CoutParQuartierChart.jsx ---
-
---- START OF FILE: src/index.css ---
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@400;500;600&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  /* Vide pour le moment */
-}
-
---- END OF FILE: src/index.css ---
-
---- START OF FILE: src/main.jsx ---
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import './index.css'; // C'est ici que les directives Tailwind sont injectées
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
---- END OF FILE: src/main.jsx ---
+--- END OF FILE: src/services/busService.js ---
 
 --- START OF FILE: src/services/equipementService.js ---
 import { supabase } from '../supabaseClient'; // Importe le client Supabase configuré
@@ -673,6 +1911,57 @@ export async function fetchEquipements() {
 // Vous pourrez ajouter d'autres fonctions ici plus tard (ex: fetchEquipementById)
 
 --- END OF FILE: src/services/equipementService.js ---
+
+--- START OF FILE: src/services/hotelService.js ---
+// src/services/hotelService.js
+import { supabase } from '../supabaseClient'; // Importe le client Supabase configuré
+
+/**
+ * Récupère tous les hôtels depuis Supabase.
+ * @returns {Promise<{data: Array|null, error: Object|null}>} Un objet avec les données ou une erreur.
+ */
+export async function fetchHotels() {
+  console.log('Attempting to fetch hotels...'); // Log pour débogage
+  const { data, error } = await supabase
+    .from('hotels') // Nom de la nouvelle table
+    .select('*'); // Sélectionne toutes les colonnes (incluant nom, classement, geom, etc.)
+
+  if (error) {
+    console.error('Error fetching hotels:', error); // Log l'erreur
+  } else {
+    console.log('Hotels fetched successfully:', data); // Log les données reçues
+  }
+
+  return { data, error };
+}
+
+// Vous pourrez ajouter d'autres fonctions ici plus tard (ex: fetchHotelById)
+
+--- END OF FILE: src/services/hotelService.js ---
+
+--- START OF FILE: src/services/jardinService.js ---
+import { supabase } from '../supabaseClient';
+
+/**
+ * Récupère tous les jardins depuis Supabase.
+ * @returns {Promise<{data: Array|null, error: Object|null}>} Un objet avec les données ou une erreur.
+ */
+export async function fetchJardins() {
+  console.log('Attempting to fetch jardins...');
+  const { data, error } = await supabase
+    .from('jardins')
+    .select('*');
+
+  if (error) {
+    console.error('Error fetching jardins:', error);
+  } else {
+    console.log('Jardins fetched successfully:', data);
+  }
+
+  return { data, error };
+}
+
+--- END OF FILE: src/services/jardinService.js ---
 
 --- START OF FILE: src/supabaseClient.js ---
 ﻿import { createClient } from '@supabase/supabase-js'

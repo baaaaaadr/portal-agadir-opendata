@@ -2,7 +2,7 @@ import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
-// Enregistrer les composants nécessaires de Chart.js
+// Register required Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -12,55 +12,56 @@ ChartJS.register(
   Legend
 );
 
-function CoutParQuartierChart({ equipements }) {
-  // 1. Préparer les données pour le graphique
-  const dataParQuartier = equipements.reduce((acc, equipement) => {
-    const quartier = equipement.quartier || 'Non spécifié';
-    // S'assurer que cout_total est un nombre, sinon 0
-    const cout = typeof equipement.cout_total === 'number' ? equipement.cout_total : (parseFloat(equipement.cout_total) || 0);
-
-    if (!acc[quartier]) {
-      acc[quartier] = 0;
-    }
-    acc[quartier] += cout;
-    return acc;
-  }, {});
-
-  // Trier les quartiers par coût décroissant pour un meilleur affichage
-  const sortedQuartiers = Object.entries(dataParQuartier)
-    .sort(([, coutA], [, coutB]) => coutB - coutA)
-    .map(([quartier]) => quartier);
-
-  const sortedCouts = sortedQuartiers.map(quartier => dataParQuartier[quartier]);
-
-  // Ajouter la détection du mode sombre
-  const isDarkMode = document.documentElement.classList.contains('dark');
-  const titleColor = isDarkMode ? '#F8F9FA' : '#303841'; // Using neutral-text-dark / neutral-text-light hex codes
-  const textColor = isDarkMode ? '#F8F9FA' : '#303841'; // For legend and ticks
-  const gridColor = isDarkMode ? 'rgba(248, 249, 250, 0.1)' : 'rgba(48, 56, 65, 0.1)'; // Lighter grid for dark, darker for light
+function CoutParQuartierChart({ equipements, theme }) {
+  // 1. Prepare chart data
+  const isDarkMode = theme === 'dark';
+  const titleColor = isDarkMode ? '#F8F9FA' : '#303841';
+  const textColor = isDarkMode ? '#ADB5BD' : '#8A959E';
+  const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
   const tooltipBodyColor = isDarkMode ? '#F8F9FA' : '#303841';
   const tooltipTitleColor = isDarkMode ? '#F8F9FA' : '#303841';
+  const barBackgroundColor = isDarkMode ? 'rgba(94, 166, 192, 0.7)' : 'rgba(62, 140, 170, 0.7)';
+  const barBorderColor = isDarkMode ? '#65A7C0' : '#3E8CAA';
 
-  // AJOUTER CETTE LIGNE POUR LE DÉBOGAGE :
-  console.log('Données pour le graphique (horizontal):', { labels: sortedQuartiers, data: sortedCouts });
+  const dataParQuartier = React.useMemo(() => {
+    console.log("Recalculating chart data...");
+    return equipements.reduce((acc, equipement) => {
+      const quartier = equipement.quartier || 'Non spécifié';
+      const cout = typeof equipement.cout_total === 'number' ? equipement.cout_total : (parseFloat(equipement.cout_total) || 0);
 
-  // 2. Configurer les données pour Chart.js
-  // Utilisation des couleurs primaires définies dans Tailwind (via leurs valeurs HEX)
-  const chartData = {
-    labels: sortedQuartiers, // Noms des quartiers sur l'axe Y maintenant
+      if (!acc[quartier]) {
+        acc[quartier] = 0;
+      }
+      acc[quartier] += cout;
+      return acc;
+    }, {});
+  }, [equipements]);
+
+  const { sortedQuartiers, sortedCouts } = React.useMemo(() => {
+    const sortedEntries = Object.entries(dataParQuartier)
+      .sort(([, coutA], [, coutB]) => coutB - coutA);
+    const quartiers = sortedEntries.map(([quartier]) => quartier);
+    const couts = sortedEntries.map(([, cout]) => cout);
+    console.log('Chart data (horizontal):', { labels: quartiers, data: couts });
+    return { sortedQuartiers: quartiers, sortedCouts: couts };
+  }, [dataParQuartier]);
+
+  // 3. Configure Chart.js data
+  const chartData = React.useMemo(() => ({
+    labels: sortedQuartiers,
     datasets: [
       {
         label: 'Coût Total (MAD)',
-        data: sortedCouts, // Coûts sur l'axe X maintenant
-        backgroundColor: 'rgba(62, 140, 170, 0.6)', // Primary DEFAULT avec transparence
-        borderColor: 'rgba(62, 140, 170, 1)', // Primary DEFAULT
+        data: sortedCouts,
+        backgroundColor: barBackgroundColor,
+        borderColor: barBorderColor,
         borderWidth: 1,
       },
     ],
-  };
+  }), [sortedQuartiers, sortedCouts, barBackgroundColor, barBorderColor]);
 
-  // 3. Configurer les options du graphique
-  const chartOptions = {
+  // 4. Configure chart options
+  const chartOptions = React.useMemo(() => ({
     indexAxis: 'y',
     responsive: true,
     maintainAspectRatio: false,
@@ -68,10 +69,11 @@ function CoutParQuartierChart({ equipements }) {
       legend: {
         position: 'top',
         labels: {
-             color: textColor,
-             font: {
-                family: "'Open Sans', sans-serif"
-             }
+          color: textColor,
+          font: {
+            family: "'Open Sans', sans-serif",
+            size: 14
+          }
         }
       },
       title: {
@@ -79,68 +81,92 @@ function CoutParQuartierChart({ equipements }) {
         text: 'Coût Total des Équipements Sportifs par Quartier',
         color: titleColor,
         font: {
-            family: "'Playfair Display', serif",
-            size: 18
+          family: "'Playfair Display', serif",
+          size: 24
         },
         padding: {
-             top: 10,
-             bottom: 20
+          top: 10,
+          bottom: 20
         }
       },
       tooltip: {
-         titleColor: tooltipTitleColor,
-         bodyColor: tooltipBodyColor,
-         callbacks: {
-            label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) {
-                    label += ': ';
-                }
-                if (context.parsed.x !== null) {
-                    label += new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(context.parsed.x);
-                }
-                return label;
+        titleColor: tooltipTitleColor,
+        bodyColor: tooltipBodyColor,
+        backgroundColor: isDarkMode ? 'rgba(48, 56, 65, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+        borderWidth: 1,
+        callbacks: {
+          label: function(context) {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
             }
-         },
-         bodyFont: {
-             family: "'Open Sans', sans-serif"
-         }
+            if (context.parsed.x !== null) {
+              label += new Intl.NumberFormat('fr-MA', {
+                style: 'currency',
+                currency: 'MAD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              }).format(context.parsed.x);
+            }
+            return label;
+          }
+        },
+        bodyFont: {
+          family: "'Open Sans', sans-serif"
+        },
+        titleFont: {
+          family: "'Open Sans', sans-serif"
+        }
       }
     },
     scales: {
-        x: {
-            beginAtZero: true,
-            ticks: {
-                color: textColor,
-                font: {
-                    family: "'Open Sans', sans-serif"
-                }
-            },
-            grid: {
-                color: gridColor
-            }
+      x: {
+        beginAtZero: true,
+        ticks: {
+          color: textColor,
+          font: {
+            family: "'Open Sans', sans-serif",
+            size: 12
+          },
+          callback: function(value) {
+            if (value >= 1000000) return (value / 1000000) + 'M';
+            if (value >= 1000) return (value / 1000) + 'k';
+            return value;
+          }
         },
-        y: {
-             ticks: {
-                 color: textColor,
-                 font: {
-                    family: "'Open Sans', sans-serif",
-                    size: 12
-                 }
-             },
-             grid: {
-                  display: false
-             }
+        grid: {
+          color: gridColor,
+          borderColor: gridColor,
+        },
+        border: {
+          color: gridColor
         }
+      },
+      y: {
+        ticks: {
+          color: textColor,
+          font: {
+            family: "'Open Sans', sans-serif",
+            size: 12
+          },
+          autoSkip: false
+        },
+        grid: {
+          display: false
+        },
+        border: {
+          color: gridColor
+        }
+      }
     },
-  };
+    animation: false,
+  }), [isDarkMode, titleColor, textColor, gridColor, tooltipTitleColor, tooltipBodyColor, barBackgroundColor, barBorderColor]);
 
-  // 4. Rendre le composant Bar de react-chartjs-2
-  // Donner une hauteur fixe ou relative au conteneur pour que maintainAspectRatio: false fonctionne bien
-  // Increased height to h-[40rem] or more if needed for many labels
+  // 5. Render the Bar component
   return (
-    <div className="my-8 p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md relative h-[40rem]">
-        <Bar options={chartOptions} data={chartData} />
+    <div className="my-8 p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md relative h-[600px]">
+      <Bar options={chartOptions} data={chartData} />
     </div>
   );
 }
