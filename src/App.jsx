@@ -12,6 +12,7 @@ import HotelsPage from './pages/HotelsPage';
 import JardinsPage from './pages/JardinsPage';
 import LignesBusPage from './pages/LignesBusPage';
 import NotFoundPage from './pages/NotFoundPage';
+import logoUrl from './assets/logo.svg'; // Import your logo file
 
 function App() {
   const [theme, setTheme] = useState(() => {
@@ -70,7 +71,8 @@ function App() {
                   aria-label="Accueil - Portail Opendata Agadir"
                   onClick={closeMobileMenu} // Close menu if logo is clicked
                 >
-                  <span className="text-xl font-bold font-heading">OpenData Agadir</span>
+                  {/* Use an img tag for the logo */}
+                  <img src={logoUrl} alt="OpenData Agadir Logo" className="h-8 w-auto" /> {/* Adjust height (h-8) as needed */}
                 </Link>
               </div>
 

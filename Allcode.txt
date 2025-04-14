@@ -1,5 +1,5 @@
 Contexte Complet du Projet: portal-agadir-opendata
-Généré le: 2025-04-14T20:38:17.015Z
+Généré le: 2025-04-14T22:59:36.907Z
 
 === ARBORESCENCE DU PROJET (Simplifiée) ===
 portal-agadir-opendata
@@ -8,6 +8,12 @@ portal-agadir-opendata
 ├── package.json
 ├── postcss.config.js
 ├── public
+│   ├── apple-touch-icon.png
+│   ├── favicon-32x32.png
+│   ├── logo.png
+│   ├── mstile-150x150.png
+│   ├── pwa-192x192.png
+│   ├── pwa-512x512.png
 │   └── vite.svg
 ├── README.md
 ├── src
@@ -21,6 +27,7 @@ portal-agadir-opendata
 │   │   ├── hotels-banner.jpg
 │   │   ├── jardin-generic-card.jpg
 │   │   ├── jardins-banner.jpg
+│   │   ├── logo.svg
 │   │   └── react.svg
 │   ├── components
 │   │   ├── datasets
@@ -120,9 +127,13 @@ export default [
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#3E8CAA">
     <title>Portail Open Data Agadir</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="alternate icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
   </head>
   <body class="font-body">
     <div id="root"></div>
@@ -171,7 +182,8 @@ export default [
     "globals": "^15.15.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vite-plugin-pwa": "^1.0.0"
   }
 }
 
@@ -249,6 +261,7 @@ import HotelsPage from './pages/HotelsPage';
 import JardinsPage from './pages/JardinsPage';
 import LignesBusPage from './pages/LignesBusPage';
 import NotFoundPage from './pages/NotFoundPage';
+import logoUrl from './assets/logo.svg'; // Import your logo file
 
 function App() {
   const [theme, setTheme] = useState(() => {
@@ -307,7 +320,8 @@ function App() {
                   aria-label="Accueil - Portail Opendata Agadir"
                   onClick={closeMobileMenu} // Close menu if logo is clicked
                 >
-                  <span className="text-xl font-bold font-heading">OpenData Agadir</span>
+                  {/* Use an img tag for the logo */}
+                  <img src={logoUrl} alt="OpenData Agadir Logo" className="h-8 w-auto" /> {/* Adjust height (h-8) as needed */}
                 </Link>
               </div>
 
@@ -3203,13 +3217,98 @@ export default {
 --- END OF FILE: tailwind.config.js ---
 
 --- START OF FILE: vite.config.js ---
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa'; // Import the plugin
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-})
+  plugins: [
+    react(),
+    VitePWA({
+      // ---- Basic PWA Configuration ----
+      registerType: 'autoUpdate', // Automatically update PWA when new content is available
+      injectRegister: 'auto', // Let the plugin handle injecting the registration script
+
+      // ---- Web App Manifest ----
+      manifest: {
+        name: 'Portail OpenData Agadir', // Full app name
+        short_name: 'OpenDataAgadir', // Short name for homescreen icon
+        description: 'Explorez, visualisez et téléchargez les données ouvertes de la Commune d\'Agadir.',
+        theme_color: '#3E8CAA', // Your primary theme color
+        background_color: '#F8F9FA', // Your light mode background color
+        display: 'standalone', // App-like feel
+        scope: '/',
+        start_url: '/',
+        icons: [
+          // --- Reference your icons placed in public/ ---
+          {
+            src: 'pwa-192x192.png', // Make sure this exists in public/
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable', // Use 'maskable' if your icon is designed for it
+          },
+          {
+            src: 'pwa-512x512.png', // Make sure this exists in public/
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable', // Use 'maskable' if your icon is designed for it
+          },
+          // Add other sizes from your list if you created them (e.g., 144x144, 256x256)
+          // {
+          //   src: 'pwa-144x144.png',
+          //   sizes: '144x144',
+          //   type: 'image/png',
+          //   purpose: 'any'
+          // },
+        ],
+      },
+
+      // ---- Service Worker Configuration (Workbox) ----
+      workbox: {
+        // Precache assets generated during build
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2}'],
+
+        // Runtime Caching for API calls and other assets
+        runtimeCaching: [
+          {
+            // Cache API calls to Supabase
+            urlPattern: ({ url }) => url.pathname.startsWith('/rest/v1/'),
+            handler: 'NetworkFirst', // Try network, fallback to cache
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 1 week
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Cache common image/font assets
+            urlPattern: /\.(?:png|gif|jpg|jpeg|svg|woff|woff2)$/,
+            handler: 'CacheFirst', // Serve from cache first
+            options: {
+              cacheName: 'asset-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
+
+      // ---- Development Options ----
+      devOptions: {
+        enabled: false, // Keep disabled for faster dev reloads
+        type: 'module',
+      },
+    }),
+  ],
+});
 
 --- END OF FILE: vite.config.js ---
 
