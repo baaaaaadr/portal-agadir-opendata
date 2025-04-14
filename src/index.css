@@ -7,3 +7,14 @@
 @layer base {
   /* Vide pour le moment */
 }
+
+/* Ajout des utilitaires pour l'ombre du texte */
+@layer utilities {
+  .text-shadow-sm {
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 0.4); /* Ombre douce */
+  }
+  .text-shadow-md {
+    text-shadow: 1px 1px 4px rgb(0 0 0 / 0.5); /* Ombre un peu plus marquée */
+  }
+   /* Tu peux ajouter d'autres styles ici si besoin */
+}

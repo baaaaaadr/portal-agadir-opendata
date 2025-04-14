@@ -1,8 +1,8 @@
-Contexte Complet du Projet: portal-agadir-opendata
-Généré le: 2025-04-14T00:15:10.649Z
+Contexte Complet du Projet: Agadir Open Data
+Généré le: 2025-04-14T17:40:37.699Z
 
 === ARBORESCENCE DU PROJET (Simplifiée) ===
-portal-agadir-opendata
+Agadir Open Data
 ├── eslint.config.js
 ├── index.html
 ├── package.json
@@ -14,19 +14,34 @@ portal-agadir-opendata
 │   ├── App.css
 │   ├── App.jsx
 │   ├── assets
+│   │   ├── about-illustration.png
+│   │   ├── agadir-hero.jpg
+│   │   ├── bus-banner.jpg
+│   │   ├── equipements-banner.jpg
+│   │   ├── hotels-banner.jpg
+│   │   ├── jardin-generic-card.jpg
+│   │   ├── jardins-banner.jpg
 │   │   └── react.svg
 │   ├── components
+│   │   ├── datasets
+│   │   │   ├── DatasetCardCatalog.jsx
+│   │   │   ├── DatasetCardHome.jsx
+│   │   │   └── MetadataBlock.jsx
 │   │   ├── maps
 │   │   │   ├── EquipementsMap.jsx
 │   │   │   ├── HotelsMap.jsx
 │   │   │   └── JardinsMap.jsx
 │   │   ├── ThemeToggle.jsx
+│   │   ├── ui
+│   │   │   └── Tabs.jsx
 │   │   └── visualizations
 │   │       ├── CoutParQuartierChart.jsx
 │   │       └── HotelsParClassementChart.jsx
 │   ├── index.css
 │   ├── main.jsx
 │   ├── pages
+│   │   ├── AboutPage.jsx
+│   │   ├── CatalogPage.jsx
 │   │   ├── EquipementsPage.jsx
 │   │   ├── HomePage.jsx
 │   │   ├── HotelsPage.jsx
@@ -135,6 +150,7 @@ export default [
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.5.0"
   },
@@ -213,24 +229,29 @@ export default {
 
 --- START OF FILE: src/App.jsx ---
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import './App.css';
+import { BrowserRouter as Router, Route, Routes, Link, NavLink } from 'react-router-dom'; 
+import './App.css'; 
 import ThemeToggle from './components/ThemeToggle';
 import HomePage from './pages/HomePage';
+import CatalogPage from './pages/CatalogPage'; 
+import AboutPage from './pages/AboutPage'; 
 import EquipementsPage from './pages/EquipementsPage';
 import HotelsPage from './pages/HotelsPage';
-import NotFoundPage from './pages/NotFoundPage';
 import JardinsPage from './pages/JardinsPage';
 import LignesBusPage from './pages/LignesBusPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
-  // 1. State for theme
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
-    return savedTheme ? savedTheme : 'light';
+    if (savedTheme) {
+        return savedTheme;
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+    }
+    return 'light'; 
   });
 
-  // 2. useEffect to apply theme to <html> and save
   useEffect(() => {
     const html = document.documentElement;
     if (theme === 'dark') {
@@ -242,58 +263,87 @@ function App() {
     console.log(`Theme changed to: ${theme}`);
   }, [theme]);
 
-  // 3. Function to toggle theme
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
+  const activeClassName = "bg-primary-dark dark:bg-neutral-bg-alt-dark"; 
+
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-neutral-bg-light dark:bg-neutral-bg-dark transition-colors duration-200">
-        <nav className="bg-primary dark:bg-neutral-surface-dark shadow-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <nav className="bg-primary dark:bg-neutral-surface-dark shadow-md sticky top-0 z-50"> 
+          <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8"> 
             <div className="flex justify-between h-16">
               <div className="flex items-center">
                 <Link
                   to="/"
-                  className="flex items-center text-white hover:text-neutral-soft-white font-semibold"
+                  className="flex items-center text-white hover:opacity-90"
                   aria-label="Accueil - Portail Opendata Agadir"
                 >
-                  <span className="text-xl font-heading">Portail Opendata Agadir</span>
+                  <span className="text-xl font-bold font-heading">OpenData Agadir</span>
                 </Link>
               </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-4 items-center">
-                <Link to="/" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Accueil</Link>
-                <Link to="/equipements" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Équipements</Link>
-                <Link to="/hotels" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Hôtels</Link>
-                <Link to="/jardins" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Jardins</Link>
-                <Link to="/lignes-bus" className="text-white hover:bg-primary-light dark:hover:bg-neutral-bg-alt-dark px-3 py-2 rounded-md text-sm font-medium font-body">Lignes de Bus</Link>
+
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-1 items-center">
+                 <NavLink
+                   to="/"
+                   className={({ isActive }) =>
+                      `font-body text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-light dark:hover:bg-neutral-bg-dark transition-colors duration-150 ${isActive ? activeClassName : ''}`
+                   }
+                 >
+                   Accueil
+                 </NavLink>
+                 <NavLink
+                    to="/catalogue"
+                    className={({ isActive }) =>
+                       `font-body text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-light dark:hover:bg-neutral-bg-dark transition-colors duration-150 ${isActive ? activeClassName : ''}`
+                    }
+                 >
+                    Catalogue
+                 </NavLink>
+                 <NavLink
+                    to="/a-propos"
+                    className={({ isActive }) =>
+                       `font-body text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-light dark:hover:bg-neutral-bg-dark transition-colors duration-150 ${isActive ? activeClassName : ''}`
+                    }
+                 >
+                   À Propos
+                 </NavLink>
               </div>
-              <div className="flex items-center space-x-4">
-                <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+
+              <div className="flex items-center">
+                 <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
               </div>
             </div>
           </div>
         </nav>
 
-        <main className="flex-1 w-full">
+        <main className="flex-grow w-full"> 
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/catalogue" element={<CatalogPage />} />
+            <Route path="/a-propos" element={<AboutPage />} />
+
             <Route path="/equipements" element={<EquipementsPage theme={theme} />} />
             <Route path="/hotels" element={<HotelsPage theme={theme} />} />
-            <Route path="/jardins" element={<JardinsPage theme={theme} />} />
-            <Route path="/lignes-bus" element={<LignesBusPage theme={theme} />} />
+            <Route path="/jardins" element={<JardinsPage theme={theme} />} /> 
+            <Route path="/lignes-bus" element={<LignesBusPage theme={theme} />} /> 
+
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
 
-        <footer className="bg-neutral-surface-light dark:bg-neutral-surface-dark mt-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-center text-sm font-body">
-              {new Date().getFullYear()} Portail Opendata Agadir. Tous droits réservés.
+        <footer className="bg-neutral-surface-light dark:bg-neutral-surface-dark mt-auto border-t border-neutral-light-sand dark:border-neutral-bg-alt-dark">
+          {/* Footer: fond full width, contenu avec padding */}
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 text-center"> 
+            <p className="text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-xs font-body">
+              {new Date().getFullYear()} Portail Open Data Agadir - Propulsé par la Commune d'Agadir.
             </p>
           </div>
         </footer>
+
       </div>
     </Router>
   );
@@ -333,6 +383,105 @@ function ThemeToggle({ theme, toggleTheme }) {
 export default ThemeToggle;
 
 --- END OF FILE: src/components/ThemeToggle.jsx ---
+
+--- START OF FILE: src/components/datasets/DatasetCardCatalog.jsx ---
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { FiTable, FiMap, FiBarChart2 } from 'react-icons/fi';
+
+function DatasetCardCatalog({ title, description, theme, keywords, lastUpdated, views, linkTo }) {
+  // Contenu simple pour l'instant
+  return (
+    <div className="p-4 border rounded-lg shadow bg-neutral-surface-light dark:bg-neutral-surface-dark flex flex-col h-full hover:shadow-md transition-shadow duration-200">
+      <h3 className="text-lg font-semibold font-heading mb-2 text-neutral-text-light dark:text-neutral-text-dark">{title}</h3>
+      <p className="text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-3 flex-grow">
+        {description}
+      </p>
+      {/* Placeholder pour les métadonnées et icônes */}
+      <div className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark mt-auto pt-2 border-t border-neutral-light-sand dark:border-neutral-bg-alt-dark">
+        <p>Thème: {theme || 'N/A'} | Maj: {lastUpdated || 'N/A'}</p>
+        {/* Afficher les icônes des vues disponibles */}
+        <div className="mt-2 flex items-center space-x-2 pt-1">
+          <span className="font-medium text-[11px]">Vues:</span>
+          {views?.table && <FiTable className="w-4 h-4" title="Tableau disponible" />}
+          {views?.map && <FiMap className="w-4 h-4" title="Carte disponible" />}
+          {views?.chart && <FiBarChart2 className="w-4 h-4" title="Graphique disponible" />}
+        </div>
+      </div>
+      <Link
+        to={linkTo}
+        className="inline-block mt-3 text-sm font-medium text-primary dark:text-primary-light hover:underline self-start"
+      >
+        Voir les détails
+      </Link>
+    </div>
+  );
+}
+
+export default DatasetCardCatalog;
+
+--- END OF FILE: src/components/datasets/DatasetCardCatalog.jsx ---
+
+--- START OF FILE: src/components/datasets/DatasetCardHome.jsx ---
+import React from 'react';
+import { Link } from 'react-router-dom'; 
+import { FiDatabase } from 'react-icons/fi'; 
+
+function DatasetCardHome({ title, icon, linkTo }) {
+  // Contenu simple pour l'instant
+  return (
+    // Assurer l'utilisation de surface-light/dark, border, et shadow
+    <div className="p-4 border border-neutral-light-sand dark:border-neutral-bg-alt-dark rounded-lg shadow bg-neutral-surface-light dark:bg-neutral-surface-dark hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+      {/* Utiliser l'icône passée en prop ou l'icône par défaut */}
+      <div className="text-3xl mb-3 text-primary dark:text-primary-light">
+        {icon ? icon : <FiDatabase />}
+      </div>
+      <h3 className="text-lg font-semibold font-heading mb-2 text-neutral-text-light dark:text-neutral-text-dark flex-grow">{title}</h3>
+      <Link
+        to={linkTo}
+        className="inline-block text-sm font-medium text-primary dark:text-primary-light hover:underline"
+      >
+        Explorer
+      </Link>
+    </div>
+  );
+}
+
+export default DatasetCardHome;
+
+--- END OF FILE: src/components/datasets/DatasetCardHome.jsx ---
+
+--- START OF FILE: src/components/datasets/MetadataBlock.jsx ---
+import React from 'react';
+
+function MetadataBlock({ title, description, source, dateMaj, licence, tags }) {
+  // Contenu simple pour l'instant
+  return (
+    <div className="p-4 sm:p-6 border border-secondary dark:border-neutral-bg-alt-dark rounded-lg shadow-sm bg-neutral-bg-alt-light dark:bg-neutral-surface-dark mb-8"> 
+      <h2 className="text-2xl md:text-3xl font-bold font-heading mb-3 text-neutral-text-light dark:text-neutral-text-dark">{title}</h2>
+      <p className="text-base font-body mb-4 text-neutral-text-light dark:text-neutral-text-dark">{description}</p> 
+      <div className="text-sm space-y-1 text-neutral-text-muted-light dark:text-neutral-text-muted-dark border-t border-secondary-dark dark:border-neutral-bg-alt-dark pt-3">
+        <p><strong>Source:</strong> {source || 'N/A'}</p>
+        <p><strong>Dernière mise à jour:</strong> {dateMaj || 'N/A'}</p>
+        <p><strong>Licence:</strong> {licence || 'Licence Ouverte (Simulation)'}</p> 
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-1">
+             <strong>Tags:</strong>
+             {tags.map(tag => (
+                 <span key={tag} className="ml-1 px-2 py-0.5 bg-secondary dark:bg-neutral-bg-dark text-neutral-charcoal dark:text-secondary-light rounded-full text-xs">
+                     {tag}
+                 </span>
+             ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default MetadataBlock;
+
+--- END OF FILE: src/components/datasets/MetadataBlock.jsx ---
 
 --- START OF FILE: src/components/maps/EquipementsMap.jsx ---
 import React from 'react';
@@ -570,6 +719,75 @@ function JardinsMap({ jardins }) {
 export default JardinsMap;
 
 --- END OF FILE: src/components/maps/JardinsMap.jsx ---
+
+--- START OF FILE: src/components/ui/Tabs.jsx ---
+// src/components/ui/Tabs.jsx
+import React, { useState } from 'react';
+
+function Tabs({ children, defaultIndex = 0 }) {
+  const [activeIndex, setActiveIndex] = useState(defaultIndex);
+
+  const tabs = React.Children.toArray(children).filter(
+    (child) => child.type === Tab
+  );
+  const panels = React.Children.toArray(children).filter(
+    (child) => child.type === TabPanel
+  );
+
+  return (
+    <div>
+      {/* Tab List */}
+      <div className="border-b border-neutral-light-sand dark:border-neutral-bg-alt-dark mb-4">
+        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+          {tabs.map((tab, index) => (
+            <button
+              key={tab.props.label}
+              onClick={() => setActiveIndex(index)}
+              className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-150
+                                 ${activeIndex === index
+                  ? 'border-primary text-primary dark:border-primary-light dark:text-primary-light'
+                  : 'border-transparent text-neutral-text-muted-light dark:text-neutral-text-muted-dark hover:text-neutral-text-light dark:hover:text-neutral-text-dark hover:border-neutral-medium-gray dark:hover:border-neutral-bg-alt-dark'
+                }`}
+              aria-current={activeIndex === index ? 'page' : undefined}
+            >
+              {tab.props.icon && <span className="mr-1.5">{tab.props.icon}</span>}
+              {tab.props.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Tab Panels */}
+      <div>
+        {panels.map((panel, index) => (
+          <div
+            key={index}
+            role="tabpanel"
+            hidden={activeIndex !== index}
+            id={`tabpanel-${index}`}
+            aria-labelledby={`tab-${index}`}
+          >
+            {activeIndex === index ? panel : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Composant pour définir un onglet (utilisé comme enfant de Tabs)
+export function Tab({ label, icon }) {
+  return null; // Ce composant ne rend rien directement, il sert à passer les props
+}
+
+// Composant pour définir le contenu d'un panneau (utilisé comme enfant de Tabs)
+export function TabPanel({ children }) {
+  return <div>{children}</div>;
+}
+
+export default Tabs;
+
+--- END OF FILE: src/components/ui/Tabs.jsx ---
 
 --- START OF FILE: src/components/visualizations/CoutParQuartierChart.jsx ---
 import React from 'react';
@@ -876,6 +1094,17 @@ export default HotelsParClassementChart;
   /* Vide pour le moment */
 }
 
+/* Ajout des utilitaires pour l'ombre du texte */
+@layer utilities {
+  .text-shadow-sm {
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 0.4); /* Ombre douce */
+  }
+  .text-shadow-md {
+    text-shadow: 1px 1px 4px rgb(0 0 0 / 0.5); /* Ombre un peu plus marquée */
+  }
+   /* Tu peux ajouter d'autres styles ici si besoin */
+}
+
 --- END OF FILE: src/index.css ---
 
 --- START OF FILE: src/main.jsx ---
@@ -892,54 +1121,363 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 )
 --- END OF FILE: src/main.jsx ---
 
+--- START OF FILE: src/pages/AboutPage.jsx ---
+// src/pages/AboutPage.jsx
+import React from 'react';
+import { Link } from 'react-router-dom';
+// --- Importer les icônes ---
+import { FiInfo, FiTarget, FiMousePointer, FiAward, FiMail, FiHelpCircle } from 'react-icons/fi';
+import { HiOutlineNewspaper, HiOutlineSparkles, HiOutlineUserGroup } from 'react-icons/hi2'; // Utiliser HiOutline pour la licence et autres
+import aboutIllustrationUrl from '../assets/about-illustration.png'; // <-- Importer l'illustration
+
+function AboutPage() {
+  return (
+    <div className="bg-neutral-bg-light dark:bg-neutral-bg-dark text-neutral-text-light dark:text-neutral-text-dark">
+      {/* Section Héros */}
+      <div className="bg-gradient-to-r from-primary to-primary-dark dark:from-neutral-bg-dark dark:to-neutral-surface-dark py-12 sm:py-16 px-4 sm:px-6 lg:px-8 text-center">
+        <h1 className="text-4xl font-heading font-bold text-white mb-4">
+          À Propos du Portail Open Data d'Agadir
+        </h1>
+        <p className="text-lg text-neutral-soft-white max-w-3xl mx-auto font-body">
+          Notre engagement pour la transparence, l'innovation et la participation citoyenne à travers le partage des données publiques.
+        </p>
+      </div>
+
+      {/* Contenu principal */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-16">
+
+        {/* Section 1: Qu'est-ce que l'Open Data ? */}
+        <section className="flex flex-col md:flex-row items-center gap-8 md:gap-12"> {/* Augmenté gap */}
+          <div className="md:w-2/3">
+            <h2 className="flex items-center text-3xl font-heading font-semibold text-primary dark:text-primary-light mb-4">
+              <FiInfo className="w-7 h-7 mr-3 flex-shrink-0" /> Qu'est-ce que l'Open Data ? {/* Ajouté flex-shrink-0 */}
+            </h2>
+            <div className="space-y-4 font-body text-base md:text-lg leading-relaxed">
+              <p>
+                L'Open Data, ou donnée ouverte, désigne la pratique de rendre accessibles et réutilisables les données produites ou collectées par une organisation (ici, la Commune d'Agadir), sans restriction technique, juridique ou financière.
+              </p>
+              <p>
+                Il s'agit d'une démarche de transparence qui permet à chacun – citoyens, entreprises, chercheurs, développeurs – de consulter, d'analyser et de créer de nouveaux services ou connaissances à partir de ces informations publiques. Les données sont généralement partagées dans des formats standards et sous des licences ouvertes qui en autorisent la libre réutilisation.
+              </p>
+            </div>
+          </div>
+          {/* Remplacement de l'icône par l'image importée */}
+          <div className="md:w-1/3 text-center flex items-center justify-center mt-6 md:mt-0">
+            <img
+              src={aboutIllustrationUrl}
+              alt="Illustration conceptuelle de données ouvertes connectées"
+              className="w-full max-w-[250px] sm:max-w-xs mx-auto rounded-lg object-contain" // Ajusté max-width et ajouté object-contain
+            />
+          </div>
+        </section>
+
+        {/* Section 2: Nos Objectifs */}
+         <section className="bg-neutral-bg-alt-light dark:bg-neutral-surface-dark p-8 rounded-lg shadow-lg">
+           <h2 className="flex items-center justify-center text-3xl font-heading font-semibold text-primary dark:text-primary-light mb-6 text-center">
+             <FiTarget className="w-7 h-7 mr-3" /> Nos Objectifs pour Agadir
+           </h2>
+           <div className="grid md:grid-cols-3 gap-6 text-center">
+             <div className="p-4">
+               <FiHelpCircle className="mx-auto text-4xl text-accent dark:text-accent-light mb-3" /> {/* Transparence / Information */}
+               <h3 className="text-xl font-semibold font-heading mb-2">Transparence Accrue</h3>
+               <p className="text-sm font-body text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                 Rendre compte de l'action municipale et permettre aux citoyens de mieux comprendre le fonctionnement de leur ville.
+               </p>
+             </div>
+             <div className="p-4">
+                <HiOutlineSparkles className="mx-auto text-4xl text-accent dark:text-accent-light mb-3" /> {/* Innovation */}
+               <h3 className="text-xl font-semibold font-heading mb-2">Innovation & Développement</h3>
+               <p className="text-sm font-body text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                 Stimuler la création de nouveaux services, applications et opportunités économiques basés sur les données locales.
+               </p>
+             </div>
+             <div className="p-4">
+                <HiOutlineUserGroup className="mx-auto text-4xl text-accent dark:text-accent-light mb-3" /> {/* Participation */}
+               <h3 className="text-xl font-semibold font-heading mb-2">Participation Citoyenne</h3>
+               <p className="text-sm font-body text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                 Fournir aux habitants les informations nécessaires pour contribuer activement au débat public et à la vie locale.
+               </p>
+             </div>
+           </div>
+         </section>
+
+        {/* Section 3: Comment Utiliser ce Portail ? */}
+        <section>
+          <h2 className="flex items-center text-3xl font-heading font-semibold text-primary dark:text-primary-light mb-6">
+            <FiMousePointer className="w-7 h-7 mr-3" /> Comment Utiliser ce Portail ?
+          </h2>
+          <div className="space-y-4 font-body text-base md:text-lg leading-relaxed">
+            <p>
+              Ce portail est conçu pour être simple et intuitif. Voici comment vous pouvez interagir avec les données :
+            </p>
+            <ul className="list-disc list-outside space-y-2 pl-6 marker:text-primary dark:marker:text-primary-light">
+              <li>
+                <strong>Explorer le Catalogue :</strong> Parcourez la <Link to="/catalogue" className="text-primary dark:text-primary-light font-medium hover:underline">page Catalogue</Link> pour découvrir tous les jeux de données disponibles. Utilisez la barre de recherche pour trouver des données spécifiques par mots-clés.
+              </li>
+              <li>
+                <strong>Consulter les Détails :</strong> Cliquez sur un jeu de données pour accéder à sa page dédiée. Vous y trouverez une description complète, les métadonnées (source, date, licence) et différentes options d'exploration.
+              </li>
+              <li>
+                <strong>Visualiser :</strong> La plupart des jeux de données proposent des visualisations intégrées :
+                <ul className='list-[circle] list-outside pl-6 mt-1 space-y-1 text-sm'>
+                    <li><span className="font-semibold">Tableau :</span> Consultez les données brutes dans un tableau interactif avec tri et filtres.</li>
+                    <li><span className="font-semibold">Carte :</span> Visualisez les données géolocalisées sur une carte interactive (si applicable).</li>
+                    <li><span className="font-semibold">Graphique :</span> Explorez des analyses visuelles comme des répartitions ou des évolutions (si applicable).</li>
+                </ul>
+              </li>
+              <li>
+                <strong>Télécharger (Prochainement) :</strong> Bientôt, vous pourrez télécharger les données dans différents formats (CSV, JSON) pour une utilisation hors ligne.
+              </li>
+               <li>
+                <strong>API (Prochainement) :</strong> Un accès programmatique via API sera mis à disposition pour les développeurs souhaitant intégrer ces données dans leurs propres applications.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* Section 4: Licence d'Utilisation */}
+        <section className="bg-neutral-surface-light dark:bg-neutral-surface-dark p-8 rounded-lg shadow border border-secondary dark:border-neutral-bg-alt-dark">
+          <h2 className="flex items-center text-2xl font-heading font-semibold text-primary dark:text-primary-light mb-4">
+            <HiOutlineNewspaper className="w-6 h-6 mr-3" /> Licence d'Utilisation
+          </h2>
+          <div className="space-y-3 font-body text-sm">
+            <p>
+              Sauf mention contraire spécifiée sur la page du jeu de données, les informations publiées sur ce portail sont mises à disposition sous les termes de la <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline text-primary-dark dark:text-secondary-light">Licence Ouverte v2.0 d'Etalab</a>.
+            </p>
+            <p>
+              Cette licence vous autorise à réutiliser librement les données, y compris à des fins commerciales, sous réserve de mentionner la source ("Commune d'Agadir" et la date de mise à jour des données). Nous vous encourageons vivement à partager vos réutilisations !
+            </p>
+             <p className="text-xs italic text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                Note : Certains jeux de données spécifiques pourraient être soumis à d'autres licences. Vérifiez toujours les métadonnées associées.
+             </p>
+          </div>
+        </section>
+
+        {/* Section 5: Contact & Contribution */}
+        <section className="text-center">
+          <h2 className="flex items-center justify-center text-3xl font-heading font-semibold text-primary dark:text-primary-light mb-6">
+            <FiMail className="w-7 h-7 mr-3" /> Contact & Contribution
+          </h2>
+          <div className="space-y-4 font-body max-w-2xl mx-auto">
+            <p>
+              Ce portail est en constante évolution. Vos retours, suggestions ou questions sont précieux !
+            </p>
+            <p>
+              Si vous identifiez une erreur, souhaitez suggérer l'ouverture d'un nouveau jeu de données, ou avez besoin d'aide, n'hésitez pas à nous contacter (méthode de contact à définir).
+            </p>
+            {/* Placeholder pour un bouton ou lien de contact */}
+            <div className="pt-4">
+                 <button disabled className="bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-200 disabled:opacity-60">
+                    Formulaire de Contact (Bientôt)
+                 </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+        {/* Lien retour Catalogue */}
+       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 text-center">
+         <Link
+            to="/catalogue"
+            className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200 text-sm"
+         >
+            ← Explorer le Catalogue
+         </Link>
+       </div>
+
+    </div>
+  );
+}
+
+export default AboutPage;
+
+--- END OF FILE: src/pages/AboutPage.jsx ---
+
+--- START OF FILE: src/pages/CatalogPage.jsx ---
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom'; // Import Link
+import DatasetCardCatalog from '../components/datasets/DatasetCardCatalog'; // Importer la carte catalogue
+
+// Données simulées pour les datasets (sera remplacé par des données dynamiques plus tard)
+// Ces métadonnées sont juste des exemples pour remplir les cartes
+const allDatasets = [
+  {
+    id: 1,
+    title: 'Équipements Sportifs',
+    description: 'Liste géolocalisée des infrastructures sportives publiques de la ville, incluant leur type et coût.',
+    theme: 'Infrastructures',
+    keywords: ['sport', 'stade', 'piscine', 'terrain', 'public'],
+    lastUpdated: '2024-03-15',
+    views: { table: true, map: true, chart: true }, // Indique les vues disponibles
+    linkTo: '/equipements',
+  },
+  {
+    id: 2,
+    title: 'Hôtels Classés',
+    description: 'Répertoire des hôtels classés sur le territoire d\'Agadir, avec leur classement, adresse et coordonnées.',
+    theme: 'Tourisme',
+    keywords: ['hébergement', 'hôtel', 'classement', 'tourisme'],
+    lastUpdated: '2024-04-01',
+    views: { table: true, map: true, chart: true },
+    linkTo: '/hotels',
+  },
+  {
+    id: 3,
+    title: 'Jardins Publics',
+    description: 'Localisation et informations sur les parcs et jardins publics accessibles à Agadir.',
+    theme: 'Environnement',
+    keywords: ['parc', 'jardin', 'vert', 'espace public', 'nature'],
+    lastUpdated: '2024-02-20',
+    views: { table: false, map: true, chart: false }, // Note: table=false, chart=false
+    linkTo: '/jardins',
+  },
+  {
+    id: 4,
+    title: 'Lignes de Bus Urbain',
+    description: 'Tracés et détails des lignes du réseau de bus urbain Alsa Agadir.',
+    theme: 'Transport',
+    keywords: ['bus', 'transport', 'mobilité', 'Alsa', 'urbain'],
+    lastUpdated: '2023-12-10',
+    views: { table: true, map: false, chart: false }, // Note: map=false, chart=false
+    linkTo: '/lignes-bus',
+  },
+  // Ajouter d'autres datasets ici si nécessaire
+];
+
+function CatalogPage() {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filtrage basique côté client basé sur le terme de recherche
+  const filteredDatasets = useMemo(() => {
+    if (!searchTerm) {
+      return allDatasets;
+    }
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return allDatasets.filter(dataset =>
+      dataset.title.toLowerCase().includes(lowerSearchTerm) ||
+      dataset.description.toLowerCase().includes(lowerSearchTerm) ||
+      (dataset.keywords && dataset.keywords.some(kw => kw.toLowerCase().includes(lowerSearchTerm)))
+    );
+  }, [searchTerm]);
+
+  return (
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
+        Catalogue des Jeux de Données
+      </h2>
+
+      {/* Barre de recherche */}
+      <div className="mb-8">
+        <label htmlFor="search-catalog" className="sr-only">Rechercher dans le catalogue</label>
+        <input
+          type="search"
+          id="search-catalog"
+          placeholder="Rechercher par titre, description ou mot-clé..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-3 rounded-md border bg-neutral-surface-light dark:bg-neutral-surface-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-base text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
+        />
+      </div>
+
+      {/* Affichage du nombre de résultats */}
+       <p className="text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-6 italic">
+         {filteredDatasets.length} jeu(x) de données trouvé(s).
+       </p>
+
+      {/* Grille des datasets */}
+      {filteredDatasets.length > 0 ? (
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+           {filteredDatasets.map((dataset) => (
+             <DatasetCardCatalog
+               key={dataset.id}
+               title={dataset.title}
+               description={dataset.description}
+               theme={dataset.theme}
+               keywords={dataset.keywords}
+               lastUpdated={dataset.lastUpdated}
+               views={dataset.views}
+               linkTo={dataset.linkTo}
+             />
+           ))}
+         </div>
+       ) : (
+         <div className="text-center py-10">
+            <p className="text-lg font-medium text-neutral-text-light dark:text-neutral-text-dark">
+               Aucun jeu de données ne correspond à votre recherche.
+            </p>
+         </div>
+       )}
+
+       {/* Lien retour accueil */}
+       <div className="mt-10 text-center">
+         <Link
+            to="/"
+            className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
+         >
+            Retour à l'accueil
+         </Link>
+       </div>
+    </div>
+  );
+}
+
+export default CatalogPage;
+
+--- END OF FILE: src/pages/CatalogPage.jsx ---
+
 --- START OF FILE: src/pages/EquipementsPage.jsx ---
+// src/pages/EquipementsPage.jsx
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchEquipements } from '../services/equipementService';
+import MetadataBlock from '../components/datasets/MetadataBlock';
 import CoutParQuartierChart from '../components/visualizations/CoutParQuartierChart';
 import EquipementsMap from '../components/maps/EquipementsMap';
+import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer le nouveau composant Tabs
+import { FiTable, FiMap, FiBarChart2 } from 'react-icons/fi'; // Importer les icônes
+import equipementsBannerUrl from '../assets/equipements-banner.jpg'; // <-- Importer la bannière
 
 function EquipementsPage({ theme }) {
+  // --- États (restent les mêmes) ---
   const [equipements, setEquipements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [chartKey, setChartKey] = useState(0);
+  const [chartKey, setChartKey] = useState(0); // Pour forcer la re-render du chart si besoin
   const [sortConfig, setSortConfig] = useState({ key: 'projet_nom', direction: 'ascending' });
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedQuartier, setSelectedQuartier] = useState('');
   const [minCost, setMinCost] = useState('');
   const [maxCost, setMaxCost] = useState('');
 
+  // --- useEffect pour charger les données (reste le même) ---
   useEffect(() => {
     async function loadEquipements() {
       setIsLoading(true);
       setError(null);
       const { data, error: fetchError } = await fetchEquipements();
-
       if (fetchError) {
         setError(fetchError.message);
         setEquipements([]);
       } else {
-        const validData = data || [];
-        setEquipements(validData);
-        setChartKey(prevKey => prevKey + 1);
+        setEquipements(data || []);
+        setChartKey(prevKey => prevKey + 1); // Trigger chart update if needed
       }
       setIsLoading(false);
     }
     loadEquipements();
   }, []);
 
+  // --- Options de quartier (reste le même) ---
   const quartierOptions = useMemo(() => {
     const quartiers = new Set(equipements.map(e => e.quartier || 'Non spécifié'));
     return ['', ...Array.from(quartiers).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))];
   }, [equipements]);
 
+  // --- Logique de filtrage et tri (reste la même) ---
   const filteredAndSortedEquipements = useMemo(() => {
-    console.log("Filtering/Sorting Equipements...", { searchTerm, selectedQuartier, minCost, maxCost, sortConfig });
-
     const minCostValue = minCost === '' ? null : parseFloat(minCost);
     const maxCostValue = maxCost === '' ? null : parseFloat(maxCost);
-
     let filtered = equipements.filter(equip => {
       const nameMatch = equip.projet_nom && equip.projet_nom.toLowerCase().includes(searchTerm.toLowerCase());
       const actualQuartier = equip.quartier || 'Non spécifié';
@@ -947,264 +1485,221 @@ function EquipementsPage({ theme }) {
       const cost = typeof equip.cout_total === 'number' ? equip.cout_total : null;
       const minCostMatch = minCostValue === null || isNaN(minCostValue) || (cost !== null && cost >= minCostValue);
       const maxCostMatch = maxCostValue === null || isNaN(maxCostValue) || (cost !== null && cost <= maxCostValue);
-
       return nameMatch && quartierMatch && minCostMatch && maxCostMatch;
     });
-
     if (sortConfig.key !== null) {
       filtered.sort((a, b) => {
-        const valA = a[sortConfig.key];
-        const valB = b[sortConfig.key];
+        const valA = a[sortConfig.key]; const valB = b[sortConfig.key];
         let comparison = 0;
-
         if (valA === null || valA === undefined) comparison = -1;
         else if (valB === null || valB === undefined) comparison = 1;
         else if (typeof valA === 'number' && typeof valB === 'number') { comparison = valA - valB; }
         else if (typeof valA === 'string' && typeof valB === 'string') { comparison = valA.localeCompare(valB, 'fr', { sensitivity: 'base' }); }
         else { comparison = String(valA).localeCompare(String(valB), 'fr', { sensitivity: 'base' }); }
-
         return sortConfig.direction === 'descending' ? (comparison * -1) : comparison;
       });
     }
     return filtered;
   }, [equipements, searchTerm, selectedQuartier, minCost, maxCost, sortConfig]);
 
+  // --- Fonctions de tri (restent les mêmes) ---
   const requestSort = (key) => {
     let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') { direction = 'descending'; }
     setSortConfig({ key, direction });
   };
-
   const getSortIcon = (columnKey) => {
-    if (sortConfig.key !== columnKey) {
-      return <span className="opacity-30 ml-1">↕</span>;
-    }
-    return sortConfig.direction === 'ascending' ?
-      <span className="opacity-80 ml-1">▲</span> :
-      <span className="opacity-80 ml-1">▼</span>;
+    if (sortConfig.key !== columnKey) { return <span className="opacity-30 ml-1">↕</span>; }
+    return sortConfig.direction === 'ascending' ? <span className="opacity-80 ml-1">▲</span> : <span className="opacity-80 ml-1">▼</span>;
   };
 
-  let content;
-  if (isLoading) {
-    content = (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  // --- Rendu des filtres (sera utilisé dans la Sidebar) ---
+  const renderFilters = () => (
+    <div className="p-4 space-y-4">
+       <h3 className="text-lg font-semibold font-heading text-neutral-text-light dark:text-neutral-text-dark border-b pb-2 mb-3 border-neutral-light-sand dark:border-neutral-bg-alt-dark">
+         Filtres
+       </h3>
+      <div>
+        <label htmlFor="search-equipement" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+          Rechercher par nom :
+        </label>
+        <input type="text" id="search-equipement" placeholder="Nom..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"/>
       </div>
-    );
-  } else if (error) {
-    content = (
-      <div className="text-center">
-        <p className="text-red-500 text-lg font-body">Erreur lors du chargement: {error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 inline-block bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
-        >
-          Réessayer
+      <div>
+        <label htmlFor="filter-quartier" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+          Filtrer par quartier :
+        </label>
+        <select id="filter-quartier" value={selectedQuartier} onChange={(e) => setSelectedQuartier(e.target.value)} className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark">
+          {quartierOptions.map(quartier => (
+            <option key={quartier} value={quartier}>{quartier === '' ? 'Tous les quartiers' : quartier}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+          Filtrer par coût (MAD) :
+        </label>
+        <div className="flex space-x-2">
+          <input type="number" id="filter-min-cost" placeholder="Min" min="0" value={minCost} onChange={(e) => setMinCost(e.target.value)} className="w-1/2 p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"/>
+          <input type="number" id="filter-max-cost" placeholder="Max" min="0" value={maxCost} onChange={(e) => setMaxCost(e.target.value)} className="w-1/2 p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"/>
+        </div>
+      </div>
+      <div className="pt-3 text-right">
+        <button onClick={() => { setSearchTerm(''); setSelectedQuartier(''); setMinCost(''); setMaxCost(''); setSortConfig({ key: 'projet_nom', direction: 'ascending' }); }} disabled={!searchTerm && !selectedQuartier && !minCost && !maxCost} className="text-xs text-secondary dark:text-secondary-light hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+          Réinitialiser
         </button>
       </div>
-    );
-  } else {
-    content = (
-      <div className="space-y-10">
-        <div className="p-4 sm:p-6 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
-          <h3 className="text-xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-            Filtrer les Équipements
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="search-equipement" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
-                Rechercher par nom :
-              </label>
-              <input
-                type="text"
-                id="search-equipement"
-                placeholder="Nom du projet..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
-              />
-            </div>
-            <div>
-              <label htmlFor="filter-quartier" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
-                Filtrer par quartier :
-              </label>
-              <select
-                id="filter-quartier"
-                value={selectedQuartier}
-                onChange={(e) => setSelectedQuartier(e.target.value)}
-                className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark"
-              >
-                {quartierOptions.map(quartier => (
-                  <option key={quartier} value={quartier}>
-                    {quartier === '' ? 'Tous les quartiers' : quartier}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="md:col-span-1 grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="filter-min-cost" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
-                  Coût Min (MAD) :
-                </label>
-                <input
-                  type="number"
-                  id="filter-min-cost"
-                  placeholder="Min"
-                  min="0"
-                  value={minCost}
-                  onChange={(e) => setMinCost(e.target.value)}
-                  className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
-                />
-              </div>
-              <div>
-                <label htmlFor="filter-max-cost" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
-                  Coût Max (MAD) :
-                </label>
-                <input
-                  type="number"
-                  id="filter-max-cost"
-                  placeholder="Max"
-                  min="0"
-                  value={maxCost}
-                  onChange={(e) => setMaxCost(e.target.value)}
-                  className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 text-right">
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedQuartier('');
-                setMinCost('');
-                setMaxCost('');
-                setSortConfig({ key: 'projet_nom', direction: 'ascending' });
-              }}
-              className="text-sm text-secondary dark:text-secondary-light hover:underline font-medium"
-              disabled={!searchTerm && !selectedQuartier && !minCost && !maxCost}
-            >
-              Réinitialiser tous les filtres
-            </button>
-          </div>
+    </div>
+  );
+
+  // --- Rendu du tableau (sera utilisé dans un TabPanel) ---
+  const renderTable = () => (
+    <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
+      <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-fixed">
+        <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
+          <tr>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[30%] sm:w-[25%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark" onClick={() => requestSort('projet_nom')}>Nom {getSortIcon('projet_nom')}</th>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[15%] sm:w-[15%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark" onClick={() => requestSort('quartier')}>Quartier {getSortIcon('quartier')}</th>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[35%] sm:w-[40%]">Composantes</th>
+            <th scope="col" className="py-3 px-4 text-right text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[20%] sm:w-[20%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark" onClick={() => requestSort('cout_total')}>Coût (MAD) {getSortIcon('cout_total')}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-neutral-bg-alt-light dark:divide-neutral-bg-alt-dark">
+          {filteredAndSortedEquipements.map((equipement) => (
+            <tr key={equipement.id} className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-150">
+              <td className="py-3 px-4 text-sm font-medium text-neutral-text-light dark:text-neutral-text-dark break-words">{equipement.projet_nom || 'N/A'}</td>
+              <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark break-words">{equipement.quartier || 'N/A'}</td>
+              <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark break-words">
+                {equipement.composantes ? (equipement.composantes.split('\n').map((line, index) => (<span key={index} className="block">{line.trim()}</span>))) : 'N/A'}
+              </td>
+              <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-right">
+                {typeof equipement.cout_total === 'number' ? equipement.cout_total.toLocaleString('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) : equipement.cout_total || 'N/A'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  // --- Structure Principale de la Page ---
+  return (
+    <div className="max-w-full mx-auto px-0 sm:px-0 lg:px-0 py-8 flex"> {/* Full width, flex container */}
+
+      {/* Sidebar (Gauche) */}
+      <aside className="w-1/4 xl:w-1/5 hidden md:block border-r border-neutral-light-sand dark:border-neutral-bg-alt-dark pr-6">
+        {/* Contenu Sidebar */}
+        {isLoading ? (
+          <div className="p-4 text-center">Chargement des filtres...</div>
+        ) : error ? (
+           <div className="p-4 text-center text-red-500">Erreur filtres</div>
+        ) : (
+            <>
+                <div className="sticky top-4"> {/* Make filters sticky */}
+                    {renderFilters()}
+                     <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-4 italic">
+                        {filteredAndSortedEquipements.length} équipement(s) affiché(s).
+                    </p>
+                </div>
+            </>
+        )}
+      </aside>
+
+      {/* Main Content (Droite) */}
+      <div className="w-full md:w-3/4 xl:w-4/5 md:pl-6">
+
+        {/* Metadonnées */}
+        <MetadataBlock
+          title="Équipements Sportifs"
+          description="Liste géolocalisée des infrastructures sportives publiques de la ville, incluant leur type et coût estimé."
+          source="Commune d'Agadir - Service des Sports"
+          dateMaj="2024-03-15"
+          licence="Licence Ouverte v2.0"
+          tags={['sport', 'stade', 'piscine', 'terrain', 'public', 'infrastructure']}
+        />
+
+        {/* Bannière Image */}
+        <div className="my-6 rounded-lg overflow-hidden shadow-md"> {/* Ajout marge et style */}
+          <img
+              src={equipementsBannerUrl}
+              alt="Bannière équipements sportifs Agadir"
+              className="w-full h-40 sm:h-56 object-cover" // Ajuster hauteur si besoin
+          />
         </div>
 
-        <p className="text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark italic">
-          {filteredAndSortedEquipements.length} équipement(s) trouvé(s).
-        </p>
-
-        {equipements.length === 0 && !isLoading && (
-          <div className="text-center py-10">
-            <p className="text-lg font-medium text-neutral-text-light dark:text-neutral-text-dark">Aucun équipement trouvé.</p>
+        {/* Affichage conditionnel pendant le chargement ou erreur */}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
-        )}
-
-        {equipements.length > 0 && filteredAndSortedEquipements.length === 0 && (
-          <div className="text-center py-10">
-            <p className="text-lg font-medium text-neutral-text-light dark:text-neutral-text-dark">Aucun équipement ne correspond à vos critères.</p>
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedQuartier('');
-                setMinCost('');
-                setMaxCost('');
-              }}
-              className="mt-4 inline-block text-sm text-primary dark:text-primary-light hover:underline"
-            >
-              Réinitialiser les filtres
+        ) : error ? (
+          <div className="text-center p-6 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+            <p className="text-red-700 dark:text-red-300 text-lg font-body">Erreur lors du chargement: {error}</p>
+            <button onClick={() => window.location.reload()} className="mt-4 inline-block bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200">
+              Réessayer
             </button>
           </div>
-        )}
-
-        {filteredAndSortedEquipements.length > 0 && (
+        ) : !equipements || equipements.length === 0 ? (
+             <div className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                Aucune donnée d'équipement disponible pour le moment.
+             </div>
+        ) : (
           <>
-            <div>
-              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-                Carte des Équipements ({filteredAndSortedEquipements.length})
-              </h3>
-              <EquipementsMap equipements={filteredAndSortedEquipements} />
-            </div>
+            {/* Section pour les filtres sur mobile/tablette (masquée sur md et plus) */}
+            <details className="md:hidden mb-4 p-4 bg-neutral-bg-alt-light dark:bg-neutral-surface-dark rounded shadow">
+                 <summary className="cursor-pointer font-semibold text-neutral-text-light dark:text-neutral-text-dark">Afficher/Masquer les Filtres</summary>
+                 {renderFilters()}
+                 <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-4 italic">
+                    {filteredAndSortedEquipements.length} équipement(s) affiché(s).
+                 </p>
+             </details>
 
-            <div>
-              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-                Coût Total par Quartier (Tous)
-              </h3>
-              <CoutParQuartierChart key={chartKey} equipements={equipements} theme={theme} />
-            </div>
+            {/* Onglets pour les visualisations */}
+            <Tabs>
+              {/* Définition des onglets avec icônes */}
+              <Tab label="Tableau" icon={<FiTable className="inline-block w-4 h-4 mr-1" />} />
+              <Tab label="Carte" icon={<FiMap className="inline-block w-4 h-4 mr-1" />} />
+              <Tab label="Analyse" icon={<FiBarChart2 className="inline-block w-4 h-4 mr-1" />} /> {/* Simplifié le label */}
 
-            <div>
-              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-                Détails des Équipements ({filteredAndSortedEquipements.length})
-              </h3>
-              <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
-                <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-fixed">
-                  <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
-                    <tr>
-                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[30%] sm:w-[25%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
-                          onClick={() => requestSort('projet_nom')}>
-                        Nom du Projet {getSortIcon('projet_nom')}
-                      </th>
-                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[15%] sm:w-[15%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
-                          onClick={() => requestSort('quartier')}>
-                        Quartier {getSortIcon('quartier')}
-                      </th>
-                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[35%] sm:w-[40%]">
-                        Composantes
-                      </th>
-                      <th scope="col" className="py-3 px-4 text-right text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[20%] sm:w-[20%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
-                          onClick={() => requestSort('cout_total')}>
-                        Coût Total (MAD) {getSortIcon('cout_total')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-bg-alt-light dark:divide-neutral-bg-alt-dark">
-                    {filteredAndSortedEquipements.map((equipement) => (
-                      <tr key={equipement.id} className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-150">
-                        <td className="py-3 px-4 text-sm font-medium text-neutral-text-light dark:text-neutral-text-dark break-words">
-                          {equipement.projet_nom || 'N/A'}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark break-words">
-                          {equipement.quartier || 'N/A'}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark break-words">
-                          {equipement.composantes ? (
-                            equipement.composantes.split('\n').map((line, index) => (
-                              <span key={index} className="block">{line.trim()}</span>
-                            ))
-                          ) : 'N/A'}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark text-right">
-                          {typeof equipement.cout_total === 'number'
-                            ? equipement.cout_total.toLocaleString('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
-                            : equipement.cout_total || 'N/A'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+              {/* Panneau 1: Tableau */}
+              <TabPanel>
+                {filteredAndSortedEquipements.length > 0 ? (
+                  renderTable()
+                ) : (
+                  <p className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                    Aucun équipement ne correspond aux filtres sélectionnés.
+                  </p>
+                )}
+              </TabPanel>
+
+              {/* Panneau 2: Carte */}
+              <TabPanel>
+                {filteredAndSortedEquipements.length > 0 ? (
+                  <EquipementsMap equipements={filteredAndSortedEquipements} />
+                ) : (
+                  <p className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                    Aucun équipement à afficher sur la carte avec les filtres actuels.
+                  </p>
+                )}
+              </TabPanel>
+
+              {/* Panneau 3: Graphique */}
+              <TabPanel>
+                 <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-2 italic">
+                    Note : Le graphique montre le coût total par quartier pour *tous* les équipements, indépendamment des filtres de coût appliqués.
+                 </p>
+                <CoutParQuartierChart key={chartKey} equipements={equipements} theme={theme} />
+              </TabPanel>
+            </Tabs>
           </>
         )}
-      </div>
-    );
-  }
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
-        Équipements Sportifs
-      </h2>
-      {content}
-      <div className="mt-10 text-center">
-        <Link
-          to="/"
-          className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
-        >
-          Retour à l'accueil
-        </Link>
+        {/* Lien Retour Accueil */}
+        <div className="mt-10 text-left"> {/* Changé pour text-left */}
+            <Link to="/catalogue" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200 text-sm">
+                ← Retour au Catalogue
+            </Link>
+        </div>
       </div>
     </div>
   );
@@ -1215,43 +1710,160 @@ export default EquipementsPage;
 --- END OF FILE: src/pages/EquipementsPage.jsx ---
 
 --- START OF FILE: src/pages/HomePage.jsx ---
+import React from 'react';
 import { Link } from 'react-router-dom';
+import DatasetCardHome from '../components/datasets/DatasetCardHome'; 
+// --- Importer les icônes ---
+import { FiDatabase, FiMapPin, FiHome, FiCompass, FiBarChart2, FiInfo, FiLayers, FiUsers, FiEye, FiFileText } from 'react-icons/fi';
+import { HiOutlineBuildingOffice2, HiOutlineSparkles, HiOutlineUserGroup, HiOutlineGlobeAlt } from "react-icons/hi2"; // Heroicons v2 Outline
+
+// --- Importer l'image de fond ---
+import heroImageUrl from '../assets/agadir-hero.jpg'; // Chemin vers ton image
+
+// Données simulées pour les datasets affichés sur l'accueil
+const featuredDatasets = [
+  {
+    id: 1,
+    title: 'Équipements Sportifs',
+    icon: <FiCompass />, // Icône pour sport/exploration
+    linkTo: '/equipements',
+  },
+  {
+    id: 2,
+    title: 'Hôtels Classés',
+    icon: <HiOutlineBuildingOffice2 />, // Icône bâtiment/hôtel
+    linkTo: '/hotels',
+  },
+  {
+    id: 3,
+    title: 'Jardins Publics',
+    icon: <FiMapPin />, // Icône localisation/parc
+    linkTo: '/jardins',
+  },
+  {
+    id: 4,
+    title: 'Lignes de Bus',
+    icon: <FiLayers />, // Icône pour réseau/lignes
+    linkTo: '/lignes-bus',
+  },
+  // On pourrait ajouter d'autres datasets ici à l'avenir
+];
+
+// Données simulées pour les thèmes
+const themes = [
+    { id: 'infra', name: 'Infrastructures', icon: <FiHome />, link: '/catalogue?theme=infra' },
+    { id: 'tourisme', name: 'Tourisme', icon: <HiOutlineGlobeAlt />, link: '/catalogue?theme=tourisme' },
+    { id: 'environnement', name: 'Environnement', icon: <FiMapPin />, link: '/catalogue?theme=env' }, // Réutiliser FiMapPin
+    { id: 'transport', name: 'Transport', icon: <FiCompass />, link: '/catalogue?theme=transport' }, // Réutiliser FiCompass
+]
 
 function HomePage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-      <h1 className="text-4xl md:text-5xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
-        Bienvenue sur Open Data Agadir
-      </h1>
-      <p className="text-xl md:text-2xl font-body text-neutral-text-light dark:text-neutral-text-dark mb-12">
-        Découvrez et explorez les données ouvertes de la ville d'Agadir.
-      </p>
-      <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-4">
-        <Link
-          to="/equipements"
-          className="inline-block w-full sm:w-auto bg-primary hover:bg-primary-light text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200 text-base"
-        >
-          Explorer les Équipements
-        </Link>
-        <Link
-          to="/hotels"
-          className="inline-block w-full sm:w-auto bg-accent hover:bg-accent-dark text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200 text-base"
-        >
-          Découvrir les Hôtels
-        </Link>
-        <Link
-          to="/jardins"
-          className="inline-block w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200 text-base"
-        >
-          Visiter les Jardins
-        </Link>
-        <Link
-          to="/lignes-bus"
-          className="inline-block w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200 text-base"
-        >
-          Explorer les Lignes de Bus
-        </Link>
-      </div>
+    <div className="w-full text-neutral-text-light dark:text-neutral-text-dark">
+      {/* Section Héros */}
+      <section
+        className="relative bg-cover bg-center py-20 sm:py-28 px-4 sm:px-6 lg:px-8 text-center text-white overflow-hidden" // Ajout de classes pour l'image
+        style={{ backgroundImage: `url(${heroImageUrl})` }} // Image de fond
+      >
+        {/* Overlay semi-transparent pour améliorer la lisibilité du texte */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60"></div>
+
+         {/* Contenu au-dessus de l'overlay */}
+        <div className="relative z-10">
+          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4 text-shadow-md"> {/* Ajout text-shadow */}
+            Portail Open Data d'Agadir
+          </h1>
+          <p className="text-xl md:text-2xl font-body mb-8 max-w-3xl mx-auto text-shadow-sm"> {/* Ajout text-shadow */}
+            Explorez, visualisez et téléchargez les données ouvertes mises à disposition par la Commune d'Agadir.
+          </p>
+          {/* Barre de recherche */}
+          <div className="max-w-xl mx-auto">
+            <input
+              type="search"
+              placeholder="Rechercher un jeu de données..."
+              disabled
+              className="w-full p-3 rounded-md border border-gray-300 dark:border-neutral-bg-alt-dark bg-white/90 dark:bg-neutral-surface-dark/90 text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark focus:outline-none focus:ring-2 focus:ring-primary-light dark:focus:ring-accent shadow-lg" // Ajout shadow, ajustement opacité fond
+              aria-label="Rechercher un jeu de données (désactivé)"
+            />
+            <p className="text-xs mt-2 text-white/80">(Recherche globale bientôt disponible)</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Chiffres Clés (Simulée) */}
+      <section className="py-12 bg-neutral-bg-alt-light dark:bg-neutral-bg-dark px-4 sm:px-6 lg:px-8">
+         <h2 className="text-2xl font-heading font-semibold text-center mb-8 text-neutral-text-light dark:text-neutral-text-dark">
+           Le portail en chiffres
+         </h2>
+         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+           <div className="p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow">
+             <FiDatabase className="mx-auto text-3xl text-primary dark:text-primary-light mb-1" />
+             <div className="text-xl font-bold text-neutral-text-light dark:text-neutral-text-dark">4</div>
+             <div className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark mt-1 uppercase tracking-wider">Jeux de données</div>
+           </div>
+           <div className="p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow">
+             <FiLayers className="mx-auto text-3xl text-primary dark:text-primary-light mb-1" />
+             <div className="text-xl font-bold text-neutral-text-light dark:text-neutral-text-dark">{themes.length}</div>
+             <div className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark mt-1 uppercase tracking-wider">Thématiques</div>
+           </div>
+           <div className="p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow">
+             <FiEye className="mx-auto text-3xl text-primary dark:text-primary-light mb-1" />
+             <div className="text-xl font-bold text-neutral-text-light dark:text-neutral-text-dark">10k+</div>
+             <div className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark mt-1 uppercase tracking-wider">Vues (Simulé)</div>
+           </div>
+            <div className="p-4 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow">
+             <FiFileText className="mx-auto text-3xl text-primary dark:text-primary-light mb-1" />
+             <div className="text-xl font-bold text-neutral-text-light dark:text-neutral-text-dark">1</div>
+             <div className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark mt-1 uppercase tracking-wider">Source</div>
+           </div>
+         </div>
+       </section>
+
+      {/* Section Catalogue par Thème (FOND MODIFIÉ + styles carte ajustés) */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-neutral-bg-alt-light dark:bg-neutral-surface-dark">
+         <h2 className="text-2xl font-heading font-semibold text-center mb-8 text-neutral-text-light dark:text-neutral-text-dark">
+           Explorer par Thème
+         </h2>
+         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+             {themes.map((theme) => (
+                 <Link
+                     key={theme.id}
+                     to={'/catalogue'}
+                     className="block p-6 text-center bg-white dark:bg-neutral-bg-dark rounded-lg shadow hover:shadow-lg transition-shadow duration-200 border border-neutral-light-sand dark:border-neutral-bg-alt-dark"
+                     aria-label={`Explorer le thème ${theme.name}`}
+                 >
+                     {/* Icône plus grande ici */}
+                     <div className="text-4xl mb-3 text-primary dark:text-primary-light">{theme.icon}</div>
+                     <div className="font-semibold font-body text-neutral-text-light dark:text-neutral-text-dark">{theme.name}</div>
+                     {/* On pourrait ajouter le nombre de datasets par thème plus tard */}
+                 </Link>
+             ))}
+         </div>
+         <div className="text-center mt-8">
+             <Link to="/catalogue" className="inline-block bg-primary hover:bg-primary-light text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200">
+                 Voir tout le catalogue
+             </Link>
+         </div>
+      </section>
+
+
+      {/* Section Nos Jeux de Données */}
+      <section className="py-12 bg-neutral-bg-alt-light dark:bg-neutral-bg-dark px-4 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-heading font-semibold text-center mb-8 text-neutral-text-light dark:text-neutral-text-dark">
+          Nos Jeux de Données en Vedette
+        </h2>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {featuredDatasets.map((dataset) => (
+            <DatasetCardHome
+              key={dataset.id}
+              title={dataset.title}
+              icon={dataset.icon}
+              linkTo={dataset.linkTo}
+            />
+          ))}
+        </div>
+      </section>
+
     </div>
   );
 }
@@ -1266,26 +1878,26 @@ import { Link } from 'react-router-dom';
 import { fetchHotels } from '../services/hotelService';
 import HotelsParClassementChart from '../components/visualizations/HotelsParClassementChart';
 import HotelsMap from '../components/maps/HotelsMap';
+import MetadataBlock from '../components/datasets/MetadataBlock';
+import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer Tabs
+import { FiTable, FiMap, FiBarChart2 } from 'react-icons/fi'; // Importer les icônes
+import hotelsBannerUrl from '../assets/hotels-banner.jpg'; // Importer la bannière
 
 function HotelsPage({ theme }) {
+  // --- États --- 
   const [hotels, setHotels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // New filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClassement, setSelectedClassement] = useState('');
-
-  // --- NOUVEL ÉTAT POUR LE TRI ---
   const [sortConfig, setSortConfig] = useState({ key: 'nom', direction: 'ascending' });
-  // --- FIN NOUVEL ÉTAT TRI ---
 
+  // --- Chargement des données --- 
   useEffect(() => {
     async function loadHotels() {
       setIsLoading(true);
       setError(null);
       const { data, error: fetchError } = await fetchHotels();
-
       if (fetchError) {
         setError(fetchError.message);
         setHotels([]);
@@ -1297,20 +1909,30 @@ function HotelsPage({ theme }) {
     loadHotels();
   }, []);
 
-  // --- LOGIQUE DE FILTRAGE ET TRI ---
+  // --- Options de classement --- 
+  const classementOptions = useMemo(() => {
+    const classements = new Set(hotels.map(h => h.classement || 'Non spécifié'));
+    // Tri spécifique pour les étoiles (simple pour l'instant)
+    return ['', ...Array.from(classements).sort((a, b) => {
+      if (a === 'Non spécifié') return 1;
+      if (b === 'Non spécifié') return -1;
+      return a.localeCompare(b, undefined, { numeric: true });
+    })];
+  }, [hotels]);
+
+  // --- Logique de filtrage et tri --- 
   const sortedAndFilteredHotels = useMemo(() => {
     let filtered = hotels.filter(hotel => {
       const nameMatch = hotel.nom && hotel.nom.toLowerCase().includes(searchTerm.toLowerCase());
       const actualClassement = hotel.classement || 'Non spécifié';
-      const classementMatchStrict = selectedClassement === '' || actualClassement === selectedClassement;
-      return nameMatch && classementMatchStrict;
+      const classementMatch = selectedClassement === '' || actualClassement === selectedClassement;
+      return nameMatch && classementMatch;
     });
 
     if (sortConfig.key !== null) {
       filtered.sort((a, b) => {
         const valA = a[sortConfig.key] || '';
         const valB = b[sortConfig.key] || '';
-
         let comparison = 0;
         if (typeof valA === 'string' && typeof valB === 'string') {
           comparison = valA.localeCompare(valB, 'fr', { sensitivity: 'base' });
@@ -1318,21 +1940,13 @@ function HotelsPage({ theme }) {
           if (valA < valB) { comparison = -1; }
           if (valA > valB) { comparison = 1; }
         }
-
         return sortConfig.direction === 'descending' ? (comparison * -1) : comparison;
       });
     }
-    console.log("Sorting/Filtering hotels...", { searchTerm, selectedClassement, sortConfig });
     return filtered;
   }, [hotels, searchTerm, selectedClassement, sortConfig]);
 
-  // --- OPTIONS DE CLASSEMENT (reste identique) ---
-  const classementOptions = useMemo(() => {
-    const classements = new Set(hotels.map(h => h.classement || 'Non spécifié'));
-    return ['', ...Array.from(classements).sort()];
-  }, [hotels]);
-
-  // --- Fonction pour demander le tri ---
+  // --- Fonctions de tri --- 
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -1340,183 +1954,201 @@ function HotelsPage({ theme }) {
     }
     setSortConfig({ key, direction });
   };
-
-  // --- Fonction pour obtenir l'icône de tri ---
   const getSortIcon = (columnKey) => {
-    if (sortConfig.key !== columnKey) {
-      return <span className="opacity-30 ml-1">↕</span>;
-    }
-    return sortConfig.direction === 'ascending' ?
-      <span className="opacity-80 ml-1">▲</span> :
-      <span className="opacity-80 ml-1">▼</span>;
+    if (sortConfig.key !== columnKey) { return <span className="opacity-30 ml-1">↕</span>; }
+    return sortConfig.direction === 'ascending' ? <span className="opacity-80 ml-1">▲</span> : <span className="opacity-80 ml-1">▼</span>;
   };
 
-  let content;
-  if (isLoading) {
-    content = (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  // --- Rendu des filtres (pour Sidebar et mobile) --- 
+  const renderFilters = () => (
+    <div className="p-4 space-y-4">
+      <h3 className="text-lg font-semibold font-heading text-neutral-text-light dark:text-neutral-text-dark border-b pb-2 mb-3 border-neutral-light-sand dark:border-neutral-bg-alt-dark">
+        Filtres
+      </h3>
+      <div>
+        <label htmlFor="search-hotel" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+          Rechercher par nom :
+        </label>
+        <input
+          type="text"
+          id="search-hotel"
+          placeholder="Nom de l'hôtel..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
+        />
       </div>
-    );
-  } else if (error) {
-    content = (
-      <div className="text-center">
-        <p className="text-red-500 text-lg font-body">Erreur lors du chargement: {error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 inline-block bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
+      <div>
+        <label htmlFor="filter-classement" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+          Filtrer par classement :
+        </label>
+        <select
+          id="filter-classement"
+          value={selectedClassement}
+          onChange={(e) => setSelectedClassement(e.target.value)}
+          className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark"
         >
-          Réessayer
+          {classementOptions.map(classement => (
+            <option key={classement} value={classement}>
+              {classement === '' ? 'Tous les classements' : classement}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="pt-3 text-right">
+        <button 
+          onClick={() => { setSearchTerm(''); setSelectedClassement(''); setSortConfig({ key: 'nom', direction: 'ascending' }); }} 
+          disabled={!searchTerm && !selectedClassement}
+          className="text-xs text-secondary dark:text-secondary-light hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Réinitialiser
         </button>
       </div>
-    );
-  } else {
-    content = (
-      <div className="space-y-10">
-        {/* Filters section */}
-        <div className="p-4 sm:p-6 bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
-          <h3 className="text-xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-            Filtrer les Hôtels
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Search field */}
-            <div>
-              <label htmlFor="search-hotel" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
-                Rechercher par nom :
-              </label>
-              <input
-                type="text"
-                id="search-hotel"
-                placeholder="Entrez un nom d'hôtel..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
-              />
-            </div>
-            {/* Classification filter */}
-            <div>
-              <label htmlFor="filter-classement" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
-                Filtrer par classement :
-              </label>
-              <select
-                id="filter-classement"
-                value={selectedClassement}
-                onChange={(e) => setSelectedClassement(e.target.value)}
-                className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark"
-              >
-                <option value="">Tous les classements</option>
-                {classementOptions.slice(1).map(classement => (
-                  <option key={classement} value={classement}>
-                    {classement}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+    </div>
+  );
+
+  // --- Rendu du tableau (pour TabPanel) ---
+  const renderTable = () => (
+    <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
+      <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark">
+        <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
+          <tr>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[40%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark" onClick={() => requestSort('nom')}>Nom {getSortIcon('nom')}</th>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[20%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark" onClick={() => requestSort('classement')}>Classement {getSortIcon('classement')}</th>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[40%]">Adresse</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-neutral-bg-alt-light dark:divide-neutral-bg-alt-dark">
+          {sortedAndFilteredHotels.map((hotel) => (
+            <tr key={hotel.id || hotel.nom} className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-150">
+              <td className="py-3 px-4 text-sm font-medium text-neutral-text-light dark:text-neutral-text-dark break-words">{hotel.nom || 'N/A'}</td>
+              <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark break-words">{hotel.classement || 'N/A'}</td>
+              <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark break-words">{hotel.adresse || 'N/A'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  // --- Structure Principale de la Page --- 
+  return (
+    <div className="max-w-full mx-auto px-0 sm:px-0 lg:px-0 py-8 flex"> {/* Full width, flex container */}
+
+      {/* Sidebar (Gauche) */}
+      <aside className="w-1/4 xl:w-1/5 hidden md:block border-r border-neutral-light-sand dark:border-neutral-bg-alt-dark pr-6">
+        {/* Contenu Sidebar */} 
+        {isLoading ? (
+          <div className="p-4 text-center">Chargement des filtres...</div>
+        ) : error ? (
+           <div className="p-4 text-center text-red-500">Erreur chargement filtres</div>
+        ) : (
+            <>
+                <div className="sticky top-4"> {/* Make filters sticky */} 
+                    {renderFilters()}
+                     <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-4 italic">
+                        {sortedAndFilteredHotels.length} hôtel(s) affiché(s).
+                    </p>
+                </div>
+            </>
+        )}
+      </aside>
+
+      {/* Main Content (Droite) */} 
+      <div className="w-full md:w-3/4 xl:w-4/5 md:pl-6">
+
+        {/* Metadonnées */} 
+        <MetadataBlock
+          title="Hôtels Classés"
+          description="Répertoire des hôtels classés sur le territoire d'Agadir, avec leur classement, adresse et coordonnées géographiques."
+          source="Commune d'Agadir / Observatoire du Tourisme"
+          dateMaj="2024-04-01"
+          licence="Licence Ouverte v2.0"
+          tags={['hébergement', 'hôtel', 'classement', 'tourisme', 'établissement']}
+        />
+
+        {/* Bannière Image */}
+        <div className="my-6 rounded-lg overflow-hidden shadow-md">
+          <img
+            src={hotelsBannerUrl}
+            alt="Bannière hôtels Agadir"
+            className="w-full h-40 sm:h-56 object-cover"
+          />
         </div>
 
-        {/* Display result count */}
-        <p className="text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark italic">
-          {sortedAndFilteredHotels.length} hôtel(s) trouvé(s).
-        </p>
-
-        {/* No results message */}
-        {hotels.length > 0 && sortedAndFilteredHotels.length === 0 && (
-          <div className="text-center py-10">
-            <p className="text-lg font-medium text-neutral-text-light dark:text-neutral-text-dark">Aucun hôtel ne correspond à vos critères.</p>
-            <button
-              onClick={() => { setSearchTerm(''); setSelectedClassement(''); }}
-              className="mt-4 inline-block text-sm text-primary dark:text-primary-light hover:underline"
-            >
-              Réinitialiser les filtres
+        {/* Affichage conditionnel pendant le chargement ou erreur */} 
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center p-6 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+            <p className="text-red-700 dark:text-red-300 text-lg font-body">Erreur lors du chargement: {error}</p>
+            <button onClick={() => window.location.reload()} className="mt-4 inline-block bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200">
+              Réessayer
             </button>
           </div>
-        )}
-
-        {/* Display components only if there are filtered results */}
-        {sortedAndFilteredHotels.length > 0 && (
+        ) : !hotels || hotels.length === 0 ? (
+             <div className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                Aucune donnée d'hôtel disponible pour le moment.
+             </div>
+        ) : (
           <>
-            {/* Map section */}
-            <div>
-              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-                Carte des Hôtels ({sortedAndFilteredHotels.length})
-              </h3>
-              <HotelsMap hotels={sortedAndFilteredHotels} />
-            </div>
+            {/* Section pour les filtres sur mobile/tablette (masquée sur md et plus) */} 
+            <details className="md:hidden mb-4 p-4 bg-neutral-bg-alt-light dark:bg-neutral-surface-dark rounded shadow">
+                 <summary className="cursor-pointer font-semibold text-neutral-text-light dark:text-neutral-text-dark">Afficher/Masquer les Filtres</summary>
+                 {renderFilters()}
+                 <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-4 italic">
+                    {sortedAndFilteredHotels.length} hôtel(s) affiché(s).
+                 </p>
+             </details>
 
-            {/* Chart section */}
-            <div>
-              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-                Répartition par Classement ({sortedAndFilteredHotels.length} affichés)
-              </h3>
-              <HotelsParClassementChart hotels={sortedAndFilteredHotels} theme={theme} />
-            </div>
+            {/* Onglets pour les visualisations */} 
+            <Tabs>
+              {/* Définition des onglets */} 
+              <Tab label="Tableau" icon={<FiTable className="inline-block w-4 h-4 mr-1" />} />
+              <Tab label="Carte" icon={<FiMap className="inline-block w-4 h-4 mr-1" />} />
+              <Tab label="Analyse (Classement)" icon={<FiBarChart2 className="inline-block w-4 h-4 mr-1" />} />
 
-            {/* List section */}
-            <div>
-              <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-                Liste Détaillée des Hôtels ({sortedAndFilteredHotels.length})
-              </h3>
-              <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
-                <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-auto">
-                  <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
-                    <tr>
-                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
-                          onClick={() => requestSort('nom')}>
-                        Nom {getSortIcon('nom')}
-                      </th>
-                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-dark"
-                          onClick={() => requestSort('classement')}>
-                        Classement {getSortIcon('classement')}
-                      </th>
-                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider">
-                        Adresse
-                      </th>
-                      <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider">
-                        Téléphone
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-bg-alt-light dark:divide-neutral-bg-alt-dark">
-                    {sortedAndFilteredHotels.map((hotel) => (
-                      <tr key={hotel.id} className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-150">
-                        <td className="py-3 px-4 whitespace-nowrap text-sm font-medium text-neutral-text-light dark:text-neutral-text-dark">
-                          {hotel.nom || 'N/A'}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
-                          {hotel.classement || 'Non spécifié'}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
-                          {hotel.adresse || 'N/A'}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
-                          {hotel.telephone || 'N/A'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+              {/* Panneau 1: Tableau */} 
+              <TabPanel>
+                {sortedAndFilteredHotels.length > 0 ? (
+                  renderTable()
+                ) : (
+                  <p className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                    Aucun hôtel ne correspond aux filtres sélectionnés.
+                  </p>
+                )}
+              </TabPanel>
+
+              {/* Panneau 2: Carte */} 
+              <TabPanel>
+                {sortedAndFilteredHotels.length > 0 ? (
+                  <HotelsMap hotels={sortedAndFilteredHotels} />
+                ) : (
+                  <p className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                    Aucun hôtel à afficher sur la carte avec les filtres actuels.
+                  </p>
+                )}
+              </TabPanel>
+
+              {/* Panneau 3: Graphique */} 
+              <TabPanel>
+                 <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-2 italic">
+                    Note : Le graphique montre la répartition pour les hôtels *actuellement affichés* après filtrage.
+                 </p>
+                <HotelsParClassementChart hotels={sortedAndFilteredHotels} theme={theme} />
+              </TabPanel>
+            </Tabs>
           </>
         )}
-      </div>
-    );
-  }
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
-        Hôtels d'Agadir
-      </h2>
-      {content}
-      <div className="mt-10 text-center">
-        <Link
-          to="/"
-          className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
-        >
-          Retour à l'accueil
-        </Link>
+        {/* Lien Retour Catalogue */} 
+        <div className="mt-10 text-left">
+            <Link to="/catalogue" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200 text-sm">
+                ← Retour au Catalogue
+            </Link>
+        </div>
       </div>
     </div>
   );
@@ -1531,18 +2163,26 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchJardins } from '../services/jardinService';
 import JardinsMap from '../components/maps/JardinsMap';
+import MetadataBlock from '../components/datasets/MetadataBlock';
+import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer Tabs
+import { FiList, FiMap } from 'react-icons/fi'; // Importer les icônes
+import jardinGenericCardUrl from '../assets/jardin-generic-card.jpg'; // <-- Importer l'image générique
+import jardinsBannerUrl from '../assets/jardins-banner.jpg'; // <-- Importer la bannière
 
-// Helper to parse equipements string
+// Helper to parse equipements string (reste inchangé)
 const parseEquipements = (equipementsString) => {
     if (!equipementsString) return [];
     return equipementsString.split('\n').map(e => e.trim()).filter(e => e);
 };
 
-function JardinsPage({ theme }) {
+function JardinsPage({ theme }) { // theme n'est pas utilisé ici mais gardé pour cohérence
+  // --- États --- 
   const [jardins, setJardins] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedQuartier, setSelectedQuartier] = useState(''); // Nouvel état pour le filtre
 
+  // --- Chargement des données --- 
   useEffect(() => {
     async function loadJardins() {
       setIsLoading(true);
@@ -1552,87 +2192,217 @@ function JardinsPage({ theme }) {
         setError(fetchError.message);
         setJardins([]);
       } else {
-        setJardins(data || []);
+        // Nettoyage simple des données au chargement si nécessaire
+        const cleanData = (data || []).map(j => ({ ...j, quartier: j.quartier?.trim() }));
+        setJardins(cleanData);
       }
       setIsLoading(false);
     }
     loadJardins();
   }, []);
 
-  const filteredJardins = useMemo(() => {
-    return jardins;
+  // --- Options de quartier pour le filtre --- 
+  const quartierOptions = useMemo(() => {
+    const quartiers = new Set(jardins.map(j => j.quartier).filter(Boolean)); // Récupère les quartiers uniques non vides
+    return ['', ...Array.from(quartiers).sort()];
   }, [jardins]);
 
-  let content;
-  if (isLoading) {
-    content = <div className="flex justify-center items-center p-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
-  } else if (error) {
-    content = <div className="text-center text-red-500 p-10">Erreur: {error}</div>;
-  } else if (filteredJardins.length === 0) {
-    content = <div className="text-center text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-10">Aucun jardin trouvé.</div>;
-  } else {
-    content = (
-      <div className="space-y-8">
-        {/* Map Display */}
-        <div>
-          <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-            Carte des Jardins ({filteredJardins.length})
-          </h3>
-          <JardinsMap jardins={filteredJardins} />
-        </div>
+  // --- Logique de filtrage --- 
+  const filteredJardins = useMemo(() => {
+    return jardins.filter(jardin => {
+      const quartierMatch = selectedQuartier === '' || jardin.quartier === selectedQuartier;
+      return quartierMatch;
+    });
+  }, [jardins, selectedQuartier]);
 
-        {/* Cards Display */}
-        <div>
-          <h3 className="text-2xl font-heading font-semibold text-neutral-text-light dark:text-neutral-text-dark mb-4">
-            Liste des Jardins ({filteredJardins.length})
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredJardins.map(jardin => (
-              <div key={jardin.id} className="bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md overflow-hidden flex flex-col">
-                {/* Image */}
-                {jardin.image_url && (
-                  <img src={jardin.image_url} alt={`Image de ${jardin.nom}`} className="w-full h-48 object-cover" />
-                )}
-                {/* Card Body */}
-                <div className="p-4 flex flex-col flex-grow">
-                  <h4 className="text-lg font-heading font-bold text-primary dark:text-primary-light mb-2">{jardin.nom}</h4>
-                  <p className="text-sm font-body text-neutral-text-light dark:text-neutral-text-dark mb-3 flex-grow">
-                    {jardin.description}
-                  </p>
-                  {/* Details Section */}
-                  <div className="text-xs border-t border-neutral-light-sand dark:border-neutral-bg-alt-dark pt-3 mt-auto space-y-1">
-                    <p><strong className="font-semibold">Quartier:</strong> {jardin.quartier || 'N/A'}</p>
-                    <p><strong className="font-semibold">Horaires:</strong> {jardin.horaires || 'N/A'}</p>
-                    {parseEquipements(jardin.equipements).length > 0 && (
-                      <div>
-                        <strong className="font-semibold">Équipements:</strong>
-                        <ul className="list-disc list-inside pl-2">
-                          {parseEquipements(jardin.equipements).map((item, index) => (
-                            <li key={index}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+  // --- Rendu des filtres (pour Sidebar et mobile) --- 
+  const renderFilters = () => (
+    <div className="p-4 space-y-4">
+      <h3 className="text-lg font-semibold font-heading text-neutral-text-light dark:text-neutral-text-dark border-b pb-2 mb-3 border-neutral-light-sand dark:border-neutral-bg-alt-dark">
+        Filtres
+      </h3>
+      <div>
+        <label htmlFor="filter-quartier" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+          Filtrer par quartier :
+        </label>
+        <select
+          id="filter-quartier"
+          value={selectedQuartier}
+          onChange={(e) => setSelectedQuartier(e.target.value)}
+          className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark"
+        >
+          {quartierOptions.map(quartier => (
+            <option key={quartier} value={quartier}>
+              {quartier === '' ? 'Tous les quartiers' : quartier}
+            </option>
+          ))}
+        </select>
       </div>
-    );
-  }
+      <div className="pt-3 text-right">
+          <button 
+              onClick={() => { setSelectedQuartier(''); }} 
+              disabled={!selectedQuartier}
+              className="text-xs text-secondary dark:text-secondary-light hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+              Réinitialiser
+          </button>
+      </div>
+    </div>
+  );
 
+  // --- Rendu des cartes (pour TabPanel 'Liste') ---
+  const renderCards = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredJardins.map(jardin => {
+        // Utilise l'image spécifique si elle existe (ex: jardin.image_url), sinon la générique
+        const imageUrl = jardin.image_url || jardinGenericCardUrl; // <-- Logique d'image
+
+        return (
+          // Structure de la carte MODIFIÉE pour inclure <img>
+          <div key={jardin.id || jardin.nom} className="bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-200 border border-neutral-light-sand dark:border-neutral-bg-alt-dark">
+            {/* Section Image */}
+            <img
+              src={imageUrl}
+              alt={`Vue de ${jardin.nom || 'Jardin'}`} // Texte alternatif plus descriptif
+              className="w-full h-48 object-cover" // Style pour l'image (hauteur fixe, couvre l'espace)
+            />
+            {/* Card Body */}
+            <div className="p-4 flex flex-col flex-grow">
+              <h4 className="text-lg font-heading font-bold text-primary dark:text-primary-light mb-2">{jardin.nom}</h4>
+              <p className="text-sm font-body text-neutral-text-light dark:text-neutral-text-dark mb-3 flex-grow">
+                {jardin.description}
+              </p>
+              {/* Details Section */} 
+              <div className="text-xs border-t border-neutral-light-sand dark:border-neutral-bg-alt-dark pt-3 mt-auto space-y-1 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                <p><strong className="font-semibold text-neutral-text-light dark:text-neutral-text-dark">Quartier:</strong> {jardin.quartier || 'N/A'}</p>
+                <p><strong className="font-semibold text-neutral-text-light dark:text-neutral-text-dark">Horaires:</strong> {jardin.horaires || 'N/A'}</p>
+                {parseEquipements(jardin.equipements).length > 0 && (
+                  <div>
+                    <strong className="font-semibold text-neutral-text-light dark:text-neutral-text-dark">Équipements:</strong>
+                    <ul className="list-disc list-inside pl-2">
+                      {parseEquipements(jardin.equipements).map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // --- Structure Principale de la Page --- 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
-        Jardins Publics d'Agadir
-      </h2>
-      {content}
-      <div className="mt-10 text-center">
-        <Link to="/" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200">
-          Retour à l'accueil
-        </Link>
+    <div className="max-w-full mx-auto px-0 sm:px-0 lg:px-0 py-8 flex"> {/* Full width, flex container */}
+
+      {/* Sidebar (Gauche) */} 
+      <aside className="w-1/4 xl:w-1/5 hidden md:block border-r border-neutral-light-sand dark:border-neutral-bg-alt-dark pr-6">
+        {/* Contenu Sidebar */} 
+        {isLoading ? (
+          <div className="p-4 text-center">Chargement des filtres...</div>
+        ) : error ? (
+           <div className="p-4 text-center text-red-500">Erreur chargement filtres</div>
+        ) : (
+            <>
+                <div className="sticky top-4"> {/* Make filters sticky */} 
+                    {renderFilters()}
+                     <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-4 italic">
+                        {filteredJardins.length} jardin(s) affiché(s).
+                    </p>
+                </div>
+            </>
+        )}
+      </aside>
+
+      {/* Main Content (Droite) */} 
+      <div className="w-full md:w-3/4 xl:w-4/5 md:pl-6">
+
+        {/* Metadonnées */} 
+        <MetadataBlock
+          title="Jardins Publics"
+          description="Localisation et informations sur les parcs et jardins publics accessibles à Agadir, incluant description et équipements."
+          source="Commune d'Agadir - Service des Espaces Verts"
+          dateMaj="2024-02-20"
+          licence="Licence Ouverte v2.0"
+          tags={['parc', 'jardin', 'vert', 'espace public', 'nature', 'loisir']}
+        />
+
+        {/* Bannière Image */}
+        <div className="my-6 rounded-lg overflow-hidden shadow-md">
+            <img
+                src={jardinsBannerUrl}
+                alt="Bannière jardins Agadir"
+                className="w-full h-40 sm:h-56 object-cover"
+            />
+        </div>
+
+        {/* Affichage conditionnel pendant le chargement ou erreur */} 
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center p-6 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+            <p className="text-red-700 dark:text-red-300 text-lg font-body">Erreur lors du chargement: {error}</p>
+            <button onClick={() => window.location.reload()} className="mt-4 inline-block bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200">
+              Réessayer
+            </button>
+          </div>
+        ) : !jardins || jardins.length === 0 ? (
+            <div className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                Aucune donnée de jardin disponible pour le moment.
+            </div>
+        ) : (
+          <>
+            {/* Section pour les filtres sur mobile/tablette (masquée sur md et plus) */} 
+            <details className="md:hidden mb-4 p-4 bg-neutral-bg-alt-light dark:bg-neutral-surface-dark rounded shadow">
+                 <summary className="cursor-pointer font-semibold text-neutral-text-light dark:text-neutral-text-dark">Afficher/Masquer les Filtres</summary>
+                 {renderFilters()}
+                 <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-4 italic">
+                    {filteredJardins.length} jardin(s) affiché(s).
+                 </p>
+             </details>
+
+            {/* Onglets pour les visualisations */} 
+            <Tabs>
+              {/* Définition des onglets */} 
+              <Tab label="Liste (Cartes)" icon={<FiList className="inline-block w-4 h-4 mr-1" />} />
+              <Tab label="Carte" icon={<FiMap className="inline-block w-4 h-4 mr-1" />} />
+
+              {/* Panneau 1: Cartes */} 
+              <TabPanel>
+                {filteredJardins.length > 0 ? (
+                  renderCards()
+                ) : (
+                  <p className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                    Aucun jardin ne correspond aux filtres sélectionnés.
+                  </p>
+                )}
+              </TabPanel>
+
+              {/* Panneau 2: Carte */} 
+              <TabPanel>
+                {filteredJardins.length > 0 ? (
+                  <JardinsMap jardins={filteredJardins} />
+                ) : (
+                  <p className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                    Aucun jardin à afficher sur la carte avec les filtres actuels.
+                  </p>
+                )}
+              </TabPanel>
+            </Tabs>
+          </>
+        )}
+
+        {/* Lien Retour Catalogue */} 
+        <div className="mt-10 text-left">
+            <Link to="/catalogue" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200 text-sm">
+                ← Retour au Catalogue
+            </Link>
+        </div>
       </div>
     </div>
   );
@@ -1647,19 +2417,26 @@ export default JardinsPage;
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchLignesBus } from '../services/busService';
+import MetadataBlock from '../components/datasets/MetadataBlock';
+import Tabs, { Tab, TabPanel } from '../components/ui/Tabs'; // Importer Tabs
+import { FiTable } from 'react-icons/fi'; // Importer l'icône
+import busBannerUrl from '../assets/bus-banner.jpg'; // Importer la bannière
 
-function LignesBusPage({ theme }) {
+function LignesBusPage({ theme }) { // theme non utilisé mais gardé
+  // --- États ---
   const [lignesBus, setLignesBus] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'numero_ligne', direction: 'ascending' });
 
+  // --- Chargement des données ---
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
+      setError(null);
       const { data, error: fetchError } = await fetchLignesBus();
-      console.log("Fetched data from Supabase:", data); // Log fetched data
+      // console.log("Fetched data from Supabase:", data); // Log fetched data
       setLignesBus(data || []);
       setError(fetchError?.message || null);
       setIsLoading(false);
@@ -1667,10 +2444,10 @@ function LignesBusPage({ theme }) {
     loadData();
   }, []);
 
+  // --- Logique de filtrage et tri ---
   const filteredAndSortedLignes = useMemo(() => {
     let filtered = lignesBus.filter(ligne => {
       const searchLower = searchTerm.toLowerCase();
-      // Using optional chaining and nullish coalescing for safety
       return (
         (ligne?.numero_ligne ?? '').toLowerCase().includes(searchLower) ||
         (ligne?.designation ?? '').toLowerCase().includes(searchLower) ||
@@ -1681,15 +2458,12 @@ function LignesBusPage({ theme }) {
 
     if (sortConfig.key !== null) {
       const extractLineNumber = (numStr) => parseInt(numStr?.substring(1) || '0', 10);
-
       filtered.sort((a, b) => {
         const key = sortConfig.key;
         let comparison = 0;
-
         if (key === 'numero_ligne') {
           comparison = extractLineNumber(a[key]) - extractLineNumber(b[key]);
         } else {
-          // Using nullish coalescing for safety
           const valA = a[key] ?? '';
           const valB = b[key] ?? '';
           comparison = valA.localeCompare(valB, 'fr', { sensitivity: 'base' });
@@ -1697,10 +2471,10 @@ function LignesBusPage({ theme }) {
         return sortConfig.direction === 'descending' ? (comparison * -1) : comparison;
       });
     }
-    // console.log("Data after filter/sort:", filtered); // Optional log
     return filtered;
   }, [lignesBus, searchTerm, sortConfig]);
 
+  // --- Fonctions de tri ---
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -1708,125 +2482,165 @@ function LignesBusPage({ theme }) {
     }
     setSortConfig({ key, direction });
   };
-
   const getSortIcon = (columnKey) => {
     if (sortConfig.key !== columnKey) return <span className="opacity-30 ml-1">↕</span>;
     return sortConfig.direction === 'ascending' ? <span className="opacity-80 ml-1">▲</span> : <span className="opacity-80 ml-1">▼</span>;
   };
 
-  let content;
-  if (isLoading) {
-    content = (
-      <div className="flex justify-center items-center p-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  // --- Rendu des filtres (Sidebar et mobile) ---
+  const renderFilters = () => (
+    <div className="p-4 space-y-4">
+      <h3 className="text-lg font-semibold font-heading text-neutral-text-light dark:text-neutral-text-dark border-b pb-2 mb-3 border-neutral-light-sand dark:border-neutral-bg-alt-dark">
+        Filtres
+      </h3>
+      <div>
+        <label htmlFor="search-ligne" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
+          Rechercher :
+        </label>
+        <input
+          type="text"
+          id="search-ligne"
+          placeholder="N°, désignation, arrêt..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
+        />
       </div>
-    );
-  } else if (error) {
-    content = (
-      <div className="text-center text-red-500 p-10">
-        Erreur: {error}
+       <div className="pt-3 text-right">
+          <button 
+              onClick={() => { setSearchTerm(''); setSortConfig({ key: 'numero_ligne', direction: 'ascending' });}} 
+              disabled={!searchTerm}
+              className="text-xs text-secondary dark:text-secondary-light hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+              Réinitialiser
+          </button>
       </div>
-    );
-  } else {
-    content = (
-      <div className="space-y-6">
-        {/* Search Bar */}
-        <div>
-          <label htmlFor="search-ligne" className="block text-sm font-medium text-neutral-text-muted-light dark:text-neutral-text-muted-dark mb-1">
-            Rechercher :
-          </label>
-          <input
-            type="text"
-            id="search-ligne"
-            placeholder="Numéro, désignation, détail..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-1/2 lg:w-1/3 p-2 rounded border bg-neutral-bg-light dark:bg-neutral-bg-dark border-neutral-medium-gray dark:border-neutral-bg-alt-dark focus:ring-primary focus:border-primary text-sm text-neutral-text-light dark:text-neutral-text-dark placeholder-neutral-text-muted-light dark:placeholder-neutral-text-muted-dark"
+    </div>
+  );
+
+  // --- Rendu du tableau (TabPanel) ---
+  const renderTable = () => (
+    <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
+      <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-auto">
+        <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
+          <tr>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[10%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark" onClick={() => requestSort('numero_ligne')}>Ligne {getSortIcon('numero_ligne')}</th>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[30%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark" onClick={() => requestSort('designation')}>Désignation {getSortIcon('designation')}</th>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[30%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark" onClick={() => requestSort('detail_depart')}>Détail Départ {getSortIcon('detail_depart')}</th>
+            <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider w-[30%] cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark" onClick={() => requestSort('detail_arrivee')}>Détail Arrivée {getSortIcon('detail_arrivee')}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-neutral-bg-alt-light dark:divide-neutral-bg-alt-dark">
+          {filteredAndSortedLignes.map((ligne) => (
+            <tr key={ligne.numero_ligne} className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-150">
+              <td className="py-3 px-4 whitespace-nowrap text-sm font-semibold text-neutral-text-light dark:text-neutral-text-dark">{ligne.numero_ligne}</td>
+              <td className="py-3 px-4 text-sm text-neutral-text-light dark:text-neutral-text-dark">{ligne.designation ?? '-'}</td>
+              <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">{ligne.detail_depart ?? '-'}</td>
+              <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">{ligne.detail_arrivee ?? '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  // --- Structure Principale de la Page ---
+  return (
+    <div className="max-w-full mx-auto px-0 sm:px-0 lg:px-0 py-8 flex"> {/* Full width, flex container */}
+
+      {/* Sidebar (Gauche) */} 
+      <aside className="w-1/4 xl:w-1/5 hidden md:block border-r border-neutral-light-sand dark:border-neutral-bg-alt-dark pr-6">
+        {/* Contenu Sidebar */} 
+        {isLoading ? (
+          <div className="p-4 text-center">Chargement des filtres...</div>
+        ) : error ? (
+           <div className="p-4 text-center text-red-500">Erreur chargement filtres</div>
+        ) : (
+            <>
+                <div className="sticky top-4"> {/* Make filters sticky */} 
+                    {renderFilters()}
+                     <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-4 italic">
+                        {filteredAndSortedLignes.length} ligne(s) affichée(s).
+                    </p>
+                </div>
+            </>
+        )}
+      </aside>
+
+      {/* Main Content (Droite) */} 
+      <div className="w-full md:w-3/4 xl:w-4/5 md:pl-6">
+
+        {/* Metadonnées */} 
+        <MetadataBlock
+          title="Lignes de Bus Urbain"
+          description="Tracés et détails des lignes du réseau de bus urbain Alsa desservant Agadir et ses environs."
+          source="Alsa Agadir / Commune d'Agadir"
+          dateMaj="2023-12-10"
+          licence="Licence Spécifique (à vérifier)"
+          tags={['bus', 'transport', 'mobilité', 'Alsa', 'urbain', 'réseau']}
+        />
+
+        {/* Bannière Image */}
+        <div className="my-6 rounded-lg overflow-hidden shadow-md">
+          <img
+            src={busBannerUrl}
+            alt="Bannière bus Agadir"
+            className="w-full h-40 sm:h-56 object-cover"
           />
         </div>
 
-        {/* Result Count */}
-        <p className="text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark italic">
-          {filteredAndSortedLignes.length} ligne(s) trouvée(s).
-        </p>
-
-        {/* No Results Message */}
-        {lignesBus.length > 0 && filteredAndSortedLignes.length === 0 && (
-          <div className="text-center py-10">
-            <p className="text-lg font-medium text-neutral-text-light dark:text-neutral-text-dark">
-              Aucune ligne ne correspond à votre recherche.
-            </p>
+        {/* Affichage conditionnel pendant le chargement ou erreur */} 
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
+        ) : error ? (
+          <div className="text-center p-6 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+            <p className="text-red-700 dark:text-red-300 text-lg font-body">Erreur lors du chargement: {error}</p>
+            <button onClick={() => window.location.reload()} className="mt-4 inline-block bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200">
+              Réessayer
+            </button>
+          </div>
+        ) : !lignesBus || lignesBus.length === 0 ? (
+            <div className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                Aucune donnée de ligne de bus disponible pour le moment.
+            </div>
+        ) : (
+          <>
+             {/* Section pour les filtres sur mobile/tablette (masquée sur md et plus) */} 
+             <details className="md:hidden mb-4 p-4 bg-neutral-bg-alt-light dark:bg-neutral-surface-dark rounded shadow">
+                 <summary className="cursor-pointer font-semibold text-neutral-text-light dark:text-neutral-text-dark">Afficher/Masquer les Filtres</summary>
+                 {renderFilters()}
+                 <p className="text-xs text-neutral-text-muted-light dark:text-neutral-text-muted-dark p-4 italic">
+                    {filteredAndSortedLignes.length} ligne(s) affichée(s).
+                 </p>
+             </details>
+
+            {/* Onglet unique pour le tableau */} 
+            <Tabs>
+              {/* Définition de l'onglet */} 
+              <Tab label="Tableau" icon={<FiTable className="inline-block w-4 h-4 mr-1" />} />
+
+              {/* Panneau Tableau */} 
+              <TabPanel>
+                {filteredAndSortedLignes.length > 0 ? (
+                  renderTable()
+                ) : (
+                  <p className="text-center py-10 text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
+                    Aucune ligne ne correspond à la recherche.
+                  </p>
+                )}
+              </TabPanel>
+            </Tabs>
+          </>
         )}
 
-        {/* Table */}
-        {filteredAndSortedLignes.length > 0 && (
-          <div className="overflow-x-auto bg-neutral-surface-light dark:bg-neutral-surface-dark rounded-lg shadow-md">
-            <table className="min-w-full divide-y divide-neutral-light-sand dark:divide-neutral-bg-alt-dark table-auto">
-              <thead className="bg-neutral-light-sand dark:bg-neutral-bg-alt-dark">
-                <tr>
-                  <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
-                      onClick={() => requestSort('numero_ligne')}>
-                    Ligne {getSortIcon('numero_ligne')}
-                  </th>
-                  <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
-                      onClick={() => requestSort('designation')}>
-                    Désignation {getSortIcon('designation')}
-                  </th>
-                  <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
-                      onClick={() => requestSort('detail_depart')}>
-                    Détail Départ {getSortIcon('detail_depart')}
-                  </th>
-                  <th scope="col" className="py-3 px-4 text-left text-xs font-medium font-heading text-neutral-text-light dark:text-neutral-text-muted-dark uppercase tracking-wider cursor-pointer hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark"
-                      onClick={() => requestSort('detail_arrivee')}>
-                    Détail Arrivée {getSortIcon('detail_arrivee')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-bg-alt-light dark:divide-neutral-bg-alt-dark">
-                {filteredAndSortedLignes.map((ligne) => {
-                  // --- AJOUT DU CONSOLE LOG POUR DEBUG ---
-                  console.log(`Rendering ligne ${ligne.numero_ligne}:`, ligne);
-                  // --- FIN CONSOLE LOG ---
-                  return ( // Ensure return statement is here
-                    <tr key={ligne.numero_ligne} className="hover:bg-neutral-bg-alt-light dark:hover:bg-neutral-bg-alt-dark transition-colors duration-150">
-                      <td className="py-3 px-4 whitespace-nowrap text-sm font-semibold text-neutral-text-light dark:text-neutral-text-dark">
-                        {ligne.numero_ligne}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-neutral-text-light dark:text-neutral-text-dark">
-                        {/* Using nullish coalescing for safety */}
-                        {ligne.designation ?? '-'}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
-                        {ligne.detail_depart ?? '-'}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-neutral-text-muted-light dark:text-neutral-text-muted-dark">
-                        {ligne.detail_arrivee ?? '-'}
-                      </td>
-                    </tr>
-                  ); // Ensure closing parenthesis for return is here
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-6">
-        Lignes de Bus d'Agadir
-      </h2>
-      {content}
-      <div className="mt-10 text-center">
-        <Link
-          to="/"
-          className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200"
-        >
-          Retour à l'accueil
-        </Link>
+        {/* Lien Retour Catalogue */} 
+        <div className="mt-10 text-left">
+            <Link to="/catalogue" className="inline-block bg-secondary hover:bg-secondary-light text-neutral-charcoal font-semibold px-6 py-2 rounded-lg transition-colors duration-200 text-sm">
+                ← Retour au Catalogue
+            </Link>
+        </div>
       </div>
     </div>
   );
@@ -1840,7 +2654,7 @@ import { Link } from 'react-router-dom';
 
 function NotFoundPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="px-4 sm:px-6 lg:px-8 py-8">
       <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-4">
         Page non trouvée
       </h2>

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 function NotFoundPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="px-4 sm:px-6 lg:px-8 py-8">
       <h2 className="text-3xl font-heading font-bold text-neutral-text-light dark:text-neutral-text-dark mb-4">
         Page non trouvée
       </h2>
